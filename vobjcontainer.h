@@ -9,13 +9,22 @@
 
 class VObj{
 public:
-	std::vector< std::string > names;
 	std::vector< ct::Vec3f > v;
 	std::vector< ct::Vec3f > vn;
 	std::vector< ct::Vec3f > t;
-	std::vector< std::vector< int > > fv;
-	std::vector< std::vector< int > > fn;
-	std::vector< std::vector< int > > ft;
+
+	class Faces{
+	public:
+		std::string name;
+		std::vector< std::vector< int > > fv;
+		std::vector< std::vector< int > > fn;
+		std::vector< std::vector< int > > ft;
+
+		void clear();
+	};
+
+	std::vector< Faces > faces;
+
 
 	void clear();
 };

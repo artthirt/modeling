@@ -155,23 +155,29 @@ void GLView::draw_model()
 
 		const std::vector< ct::Vec3f> &_v = obj.v;
 		const std::vector< ct::Vec3f> &_vn = obj.vn;
-		const std::vector< std::vector< int > > & fv = obj.fv;
-		const std::vector< std::vector< int > > & fn = obj.fn;
 
-		for(size_t i = 0; i < fv.size(); ++i){
+		for(auto itf = obj.faces.begin(); itf != obj.faces.end(); itf++){
 
-			const std::vector< int > &fvi = fv[i];
-			const std::vector< int > &fni = fn[i];
+			const VObj::Faces& faces = *itf;
 
-			glBegin(GL_POLYGON);
-			for(size_t j = 0; j < fvi.size(); ++j){
-				const ct::Vec3f& v = _v[fvi[j] - 1];
-				const ct::Vec3f& vn = _vn[fni[j] - 1];
+			const std::vector< std::vector< int > > & fv = faces.fv;
+			const std::vector< std::vector< int > > & fn = faces.fn;
 
-				glNormal3fv(vn.val);
-				glVertex3fv(v.val);
+			for(size_t i = 0; i < fv.size(); ++i){
+
+				const std::vector< int > &fvi = fv[i];
+				const std::vector< int > &fni = fn[i];
+
+				glBegin(GL_POLYGON);
+				for(size_t j = 0; j < fvi.size(); ++j){
+					const ct::Vec3f& v = _v[fvi[j] - 1];
+					const ct::Vec3f& vn = _vn[fni[j] - 1];
+
+					glNormal3fv(vn.val);
+					glVertex3fv(v.val);
+				}
+				glEnd();
 			}
-			glEnd();
 		}
 	}
 	glDisable(GL_LIGHTING);

@@ -142,10 +142,10 @@ public:
 		return *this;
 	}
 	bool operator== (const Vec_<T, count>& v) const{
-		const eps = 1e-12;
-		double ret = 0;
+		const T eps = 1e-12;
+		double res = 0;
 		for(int i = 0; i < count; i++){
-			ret += abs(val[i] - v.val[i]);
+			res += abs(val[i] - v.val[i]);
 		}
 		return res < eps;
 	}
@@ -354,8 +354,7 @@ public:
 	Mat_<T> operator= (const Vec_<T, count>& v){
 		this->rows = 1;
 		this->cols = count;
-		val.resize(rows * cols);
-		std::copy(data, data + rows * cols * depth, (char*)&val[0]);
+		val = v.val;
 		return *this;
 	}
 	///***********************

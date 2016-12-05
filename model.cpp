@@ -24,7 +24,7 @@ Model::Model()
 	m_kd_angle = 1;
 	m_dt = 1.f/100;
 	m_force = 0;
-	m_max_force = 40.;
+	m_max_force = 15.;
 
 	prev_e = 0;
 	e_I = 0;
@@ -186,7 +186,7 @@ void Model::simpleHeightControl(const Vec3f &normal)
 //	Vec3f vec_force = normal * m_force;
 //	float force = vec_force[2];
 
-	const float kp = 1.0;
+	const float kp = 1.1;
 	const float kd = 20.0;
 	const float ki = 0.005;
 
