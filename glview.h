@@ -20,9 +20,15 @@ public:
 	explicit GLView(QWidget *parent = 0);
 	~GLView();
 
+	Model &model();
+
 	void set_yaw(float v);
 	void set_tangage(float v);
 	void set_roll(float v);
+
+	float yaw() const;
+	float tangage() const;
+	float roll() const;
 
 	void set_force(float f);
 
@@ -50,9 +56,14 @@ private:
 
 	ct::Vec3f m_angles;
 
+	ct::Vec3f m_color_space;
+
 	void init();
 	void draw_net();
 	void draw_model();
+
+	void load_xml();
+	void save_xml();
 
 	// QGLWidget interface
 public slots:

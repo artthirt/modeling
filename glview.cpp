@@ -11,7 +11,58 @@
 #include <QMouseEvent>
 #include <QDebug>
 
+#include <simple_xml.hpp>
+
+const QString xml_config("config.glview.xml");
+
 typedef float GLVertex3f[3];
+
+////////////////////////////////////
+
+void draw_line(const ct::Vec3f& v, const ct::Vec3f & col = ct::Vec3f::ones(), float scale = 1.)
+{
+	glLineWidth(3);
+
+	glPushMatrix();
+
+	glScalef(scale, scale, scale);
+
+	glColor3fv(col.ptr());
+	glBegin(GL_LINES);
+	glVertex3fv(ct::Vec3f::zeros().ptr());
+	glVertex3fv(v.ptr());
+	glEnd();
+
+	glPopMatrix();
+
+	glLineWidth(1);
+}
+
+void draw_cylinder(float R, float H, int cnt = 10, const ct::Vec3f& col = ct::Vec4f::ones())
+{
+	float z0 = 0;
+	float z1 = H;
+
+	glColor4fv(col.ptr());
+
+	glBegin(GL_TRIANGLE_STRIP);
+	for(int i = 0; i <= cnt; i++){
+		float xi = sin(2. * i / cnt * M_PI);
+		float yi = cos(2. * i / cnt * M_PI);
+		float x0 = R * xi;
+		float y0 = R * yi;
+
+//		x1 = R * sin(2. * (i + 1) / cnt * M_PI);
+//		y1 = R * cos(2. * (i + 1) / cnt * M_PI);
+
+		glNormal3f(yi, xi, 0);
+		glVertex3f(x0, y0, z0);
+		glVertex3f(x0, y0, z1);
+	}
+	glEnd();
+}
+
+////////////////////////////////////
 
 GLView::GLView(QWidget *parent) :
 	QGLWidget(parent),
@@ -19,7 +70,8 @@ GLView::GLView(QWidget *parent) :
   , m_init(false)
   , m_update(false)
   , m_delta_z(0)
-  , m_current_z(10)
+  , m_current_z(0)
+  , m_color_space(ct::Vec3f::ones())
 {
 	ui->setupUi(this);
 
@@ -35,30 +87,57 @@ GLView::GLView(QWidget *parent) :
 		qDebug() << "obj not opened";
 	}
 
+	load_xml();
+
 	setMouseTracking(true);
 }
 
 GLView::~GLView()
 {
 	delete ui;
+
+	save_xml();
+}
+
+Model &GLView::model()
+{
+	return m_model;
 }
 
 void GLView::set_yaw(float v)
 {
 	m_angles[2] = v;
+	m_model.setYaw(v);
 	m_update = true;
 }
 
 void GLView::set_tangage(float v)
 {
 	m_angles[0] = v;
+	m_model.setTangage(v);
 	m_update = true;
 }
 
 void GLView::set_roll(float v)
 {
 	m_angles[1] = v;
+	m_model.setRoll(v);
 	m_update = true;
+}
+
+float GLView::yaw() const
+{
+	return ct::rad2angle(m_angles[2]);
+}
+
+float GLView::tangage() const
+{
+	return ct::rad2angle(m_angles[0]);
+}
+
+float GLView::roll() const
+{
+	return ct::rad2angle(m_angles[1]);
 }
 
 void GLView::set_force(float f)
@@ -81,6 +160,7 @@ void GLView::setHeightGoal(float h)
 void GLView::init()
 {
 	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GLView::draw_net()
@@ -134,18 +214,25 @@ void GLView::draw_model()
 	ct::Matf eiler = m_model.eiler();
 	glTranslatef(pos[0], pos[1], pos[2]);
 
+	draw_line(m_model.direction_force(), ct::Vec3f(1, 0.3, 0.3), 1);
+
 	glMultMatrixf(eiler.ptr());
 
-	ct::Matf mat = ct::get_eiler_mat4<float>(m_angles);
+//	ct::Matf mat = ct::get_eiler_mat4<float>(m_angles);
 
-	glMultMatrixf(mat.ptr());
+//	glMultMatrixf(mat.ptr());
 
 	glRotatef(90, 1, 0, 0);
+
+	glScalef(0.3, 0.3, 0.3);
 
 	glColor3f(0.5, 0.5, 0.5);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+
+	const float diffuse_material[] = {0.3, 0.3, 0.3, 1};
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_material);
 
 	for(auto it = m_model.vobjs().begin(); it != m_model.vobjs().end(); it++){
 		const VObj &obj = *it;
@@ -183,6 +270,51 @@ void GLView::draw_model()
 	glDisable(GL_LIGHTING);
 
 	glPopMatrix();
+}
+
+void GLView::load_xml()
+{
+	QMap< QString, QVariant > params;
+
+	if(!SimpleXML::load_param(xml_config, params))
+		return;
+
+	m_delta_pt.setX(params["rotate_x"].toFloat());
+	m_delta_pt.setY(params["rotate_y"].toFloat());
+
+	m_current_z = params["offset_z"].toFloat();
+
+	m_color_space[0] = params["color_space_r"].toFloat();
+	m_color_space[1] = params["color_space_g"].toFloat();
+	m_color_space[2] = params["color_space_b"].toFloat();
+
+	m_angles[0] = params["tangage"].toFloat();
+	m_angles[1] = params["roll"].toFloat();
+	m_angles[2] = params["yaw"].toFloat();
+
+	m_model.setTangage(m_angles[0]);
+	m_model.setRoll(m_angles[1]);
+	m_model.setYaw(m_angles[2]);
+}
+
+void GLView::save_xml()
+{
+	QMap< QString, QVariant > params;
+
+	params["rotate_x"] = m_delta_pt.x();
+	params["rotate_y"] = m_delta_pt.y();
+
+	params["offset_z"] = m_current_z;
+
+	params["color_space_r"] = m_color_space[0];
+	params["color_space_g"] = m_color_space[1];
+	params["color_space_b"] = m_color_space[2];
+
+	params["tangage"] = m_angles[0];
+	params["roll"] = m_angles[1];
+	params["yaw"] = m_angles[2];
+
+	SimpleXML::save_param(xml_config, params);
 }
 
 
@@ -236,9 +368,14 @@ void GLView::glDraw()
 	makeCurrent();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(1, 1, 1, 1);
+	glClearColor(m_color_space[0], m_color_space[1], m_color_space[2], 1);
 	glLoadIdentity();
-	glTranslatef(0, 0, -10);
+
+	const float poslight[] = {0, 0, 10, 1};
+
+	glLightfv(GL_LIGHT0, GL_POSITION, poslight);
+
+	glTranslatef(0, 0, -5);
 
 	glTranslatef(0, 0, -(m_current_z + m_delta_z));
 
@@ -246,7 +383,12 @@ void GLView::glDraw()
 	glRotatef(m_delta_pt.y(), 1, 0, 0);
 
 	draw_net();
+
 	draw_model();
+
+	glEnable(GL_BLEND);
+	draw_cylinder(virtual_xy_edge, 0.3, 16, ct::Vec4f(0.8, 0.4, 0.1, 0.5));
+	glDisable(GL_BLEND);
 
 	swapBuffers();
 }

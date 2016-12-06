@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl
+QT       += core gui opengl xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,13 +27,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     glview.cpp \
     model.cpp \
-    vobjcontainer.cpp
+    vobjcontainer.cpp \
+    simple_xml.cpp
 
 HEADERS  += mainwindow.h \
     glview.h \
     model.h \
     custom_types.h \
-    vobjcontainer.h
+    vobjcontainer.h \
+    simple_xml.hpp
 
 FORMS    += mainwindow.ui \
     glview.ui

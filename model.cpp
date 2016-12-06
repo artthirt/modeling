@@ -9,12 +9,12 @@ using namespace std;
 const float gravity = 9.8f;
 const int maximum_logs = 1000;
 
-const float virtual_z_edge = 50.;
-const float virtual_xy_edge = 15.;
+const float attenuation = 0.95;
 
 Model::Model()
 	: m_useSimpleHeightControl(0)
 	, m_heightGoal(8)
+	, m_useMultipleForces(false)
 
 {
 	m_mass = 1;
@@ -28,13 +28,22 @@ Model::Model()
 
 	prev_e = 0;
 	e_I = 0;
+
+	m_force_1 = 0;
+	m_force_2 = 0;
+	m_force_3 = 0;
+	m_force_4 = 0;
+	m_arm = 0.2;
 }
 
 void Model::calulcate()
 {
 	Vec3f vel(0, 0, 1);
 
+	calculate_angles();
+
 	Matf m = get_eiler_mat(m_angles);
+	m = m.t();
 
 	//push_log("eiler:\n" + m.operator std::string());
 
@@ -43,14 +52,18 @@ void Model::calulcate()
 	//push_log("mult to vec:\n" + mv.operator std::string());
 
 	vel = mv.toVec<3>();
+	m_direction_force = vel;
 
 	simpleHeightControl(vel);
+
 	//push_log("from mat: " + vel.operator std::string());
 	vel *= (m_force/m_mass * m_dt);
 
 	m_vel += vel;
 
 	m_vel += Vec3f(0.f, 0.f, -m_mass * gravity * m_dt);
+
+	m_vel *= attenuation;
 
 	push_log("after force: " + m_vel.operator std::string());
 
@@ -170,6 +183,141 @@ void Model::setSimpleHeightControl(bool val)
 void Model::setHeightGoal(float h)
 {
 	m_heightGoal = h;
+}
+
+void Model::setTangageGoal(float v)
+{
+	m_angles_goal[0] = v;
+}
+
+void Model::setRollGoal(float v)
+{
+	m_angles_goal[1] = v;
+}
+
+void Model::setYawGoal(float v)
+{
+	m_angles_goal[2] = v;
+}
+
+void Model::setForces(float f1, float f2, float f3, float f4)
+{
+	if(f1 < 0) f1 = 0;
+	if(f2 < 0) f2 = 0;
+	if(f3 < 0) f3 = 0;
+	if(f4 < 0) f4 = 0;
+	m_force_1 = f1;
+	m_force_2 = f2;
+	m_force_3 = f3;
+	m_force_4 = f4;
+}
+
+void Model::setForce(int index, float v)
+{
+	if(v < 0)
+		v = 0;
+	switch (index) {
+		case 1:
+			m_force_1 = v;
+			break;
+		case 2:
+			m_force_2 = v;
+			break;
+		case 3:
+			m_force_3 = v;
+			break;
+		case 4:
+			m_force_4 = v;
+			break;
+		default:
+			break;
+	}
+}
+
+void Model::setUseMultipleForces(bool f)
+{
+	m_useMultipleForces = f;
+	m_force = 0.0001;
+}
+
+void Model::reset_angles()
+{
+	m_angles = Vec3f::zeros();
+	m_force_1 = 0;
+	m_force_2 = 0;
+	m_force_3 = 0;
+	m_force_4 = 0;
+
+	m_pos = Vec3f::zeros();
+}
+
+void Model::setYaw(float v)
+{
+	m_angles[2] = v;
+}
+
+void Model::setRoll(float v)
+{
+	m_angles[1] = v;
+}
+
+void Model::setTangage(float v)
+{
+	m_angles[0] = v;
+}
+
+Vec3f Model::direction_force() const
+{
+	return m_direction_force;
+}
+
+void Model::calculate_angles()
+{
+	if(!m_useMultipleForces)
+		return;
+
+	/// [0] - tangage
+	/// [1] - roll
+	/// [2] - yaw
+	ct::Vec3f e = m_angles_goal - m_angles;
+
+//	Vec3f arm_1(m_arm, m_arm, 0);
+//	Vec3f arm_2(-m_arm, -m_arm, 0);
+//	Vec3f arm_3(m_arm, -m_arm, 0);
+//	Vec3f arm_4(-m_arm, m_arm, 0);
+
+	float df_12 = m_force_1 - m_force_2;
+	float df_34 = m_force_3 - m_force_4;
+
+	if(df_12 != 0 || df_34 != 0){
+
+		float a_12 = df_12 / m_mass;
+		float a_34 = df_34 / m_mass;
+
+		/// a = F / m; a = w^2 * R
+		float w_12 = sqrt(std::abs(a_12) / m_arm) * m_dt;
+		if(a_12 < 0) w_12 = -w_12;
+		float w_34 = sqrt(std::abs(a_34) / m_arm) * m_dt;
+		if(a_34 < 0) w_34 = -w_34;
+		float w_tan_12	= w_12 * sin(M_PI / 4);
+		float w_roll_12 = w_12 * cos(M_PI / 4);
+		float w_tan_34	= w_34 * sin(M_PI / 4);
+		float w_roll_34 = w_34 * cos(M_PI / 4);
+
+		m_angles[0] += w_tan_12 + w_tan_34;
+		m_angles[1] += w_roll_34 - w_roll_12;
+
+	}
+	/// yaw = F1 + F2 - (F3 + F4)
+	float df_1234 = m_force_1 + m_force_2 - m_force_3 - m_force_4;
+	if(df_1234){
+		float a1234 = df_1234 / m_mass;
+		float w_1234 = sqrt(std::abs(a1234) / m_arm) * m_dt;
+		if(a1234 < 0) w_1234 = -w_1234;
+		m_angles[2] += w_1234;
+	}
+
+	m_force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
 }
 
 void Model::simpleHeightControl(const Vec3f &normal)

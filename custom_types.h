@@ -149,6 +149,14 @@ public:
 		}
 		return res < eps;
 	}
+	Vec_<T, count> conj(){
+		Vec_<T, count > res;
+		for(int i = 0; i < count; i++){
+			res.val[i] = -val[i];
+		}
+		return res;
+	}
+
 	double norm() const{
 		double ret = 0;
 		for(int i = 0; i < count; i++){
@@ -163,6 +171,13 @@ public:
 		}
 		return ret;
 
+	}
+
+	T* ptr(){
+		return val;
+	}
+	const T* ptr() const{
+		return val;
 	}
 
 	int channels() const{
@@ -184,6 +199,13 @@ public:
 		Vec_< T, count > res;
 		for(int i = 0; i < count; i++){
 			res.val[i] = 0;
+		}
+		return res;
+	}
+	static Vec_< T, count > ones(){
+		Vec_< T, count > res;
+		for(int i = 0; i < count; i++){
+			res.val[i] = 1;
 		}
 		return res;
 	}
@@ -556,7 +578,7 @@ Mat_<T> operator* (const Mat_<T>& m1, const Vec_< T, count >& v)
 	for(int i = 0; i < m1.rows; i++){
 		T s = 0;
 		for(int j = 0; j < m1.cols; j++){
-			s += m1.val[i * m1.cols + j] * v.val[i];
+			s += m1.val[i * m1.cols + j] * v.val[j];
 		}
 		res.val[i] = s;
 	}

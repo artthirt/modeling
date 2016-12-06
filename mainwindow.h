@@ -41,6 +41,28 @@ private slots:
 
 	void on_doubleSpinBox_valueChanged(double arg1);
 
+	void on_pb_use_forces_clicked(bool checked);
+
+	void on_dsb_f1_valueChanged(double arg1);
+
+	void on_dsb_f2_valueChanged(double arg1);
+
+	void on_dsb_f3_valueChanged(double arg1);
+
+	void on_dsb_f4_valueChanged(double arg1);
+
+	void on_pb_rese_angles_clicked();
+
+	void on_dsb_common_force_valueChanged(double arg1);
+
+	void on_hs_yaw_goal_valueChanged(int value);
+
+	void on_hs_tangage_goal_valueChanged(int value);
+
+	void on_hs_roll_goal_valueChanged(int value);
+
+	void on_dsb_height_valueChanged(double arg1);
+
 private:
 	Ui::MainWindow *ui;
 
@@ -48,6 +70,9 @@ private:
 	bool m_pressed_force;
 	float m_force;
 	float m_forceGoal;
+
+	void load_xml();
+	void save_xml();
 };
 
 #endif // MAINWINDOW_H

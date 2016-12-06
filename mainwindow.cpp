@@ -1,8 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "simple_xml.hpp"
+
 const float maximum_force = 150.;
 const float d_force = maximum_force/1000.;
+
+const QString config_main("config.main.xml");
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -17,10 +21,18 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_timer.start(50);
 
 	connect(ui->widgetView, SIGNAL(push_logs(QString)), this, SLOT(onPushLog(QString)));
+
+	load_xml();
+
+	ui->hs_yaw->setValue(ui->widgetView->yaw() / 180. * ui->hs_yaw->maximum());
+	ui->hs_roll->setValue(ui->widgetView->roll() / 180. * ui->hs_roll->maximum());
+	ui->hs_tangage->setValue(ui->widgetView->tangage() / 180. * ui->hs_tangage->maximum());
 }
 
 MainWindow::~MainWindow()
 {
+	save_xml();
+
 	delete ui;
 }
 
@@ -37,6 +49,56 @@ void MainWindow::on_hs_tangage_valueChanged(int value)
 void MainWindow::on_hs_roll_valueChanged(int value)
 {
 	ui->widgetView->set_roll(ct::angle2rad(180. * value/ui->hs_roll->maximum()));
+}
+
+void MainWindow::on_hs_yaw_goal_valueChanged(int value)
+{
+	ui->widgetView->model().setYawGoal(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+}
+
+void MainWindow::on_hs_tangage_goal_valueChanged(int value)
+{
+	ui->widgetView->model().setTangageGoal(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+}
+
+void MainWindow::on_hs_roll_goal_valueChanged(int value)
+{
+	ui->widgetView->model().setRollGoal(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+}
+
+void MainWindow::load_xml()
+{
+	QMap< QString, QVariant > params;
+
+	if(!SimpleXML::load_param(config_main, params))
+		return;
+
+	QString state = params["state"].toString();
+	QByteArray bstate = QByteArray::fromBase64(state.toLatin1());
+	restoreState(bstate);
+
+	ui->dsb_common_force->setValue(params["f_common"].toFloat());
+	ui->dsb_f1->setValue(params["f1"].toFloat());
+	ui->dsb_f2->setValue(params["f2"].toFloat());
+	ui->dsb_f3->setValue(params["f3"].toFloat());
+	ui->dsb_f4->setValue(params["f4"].toFloat());
+	ui->dsb_height->setValue(params["height"].toFloat());
+}
+
+void MainWindow::save_xml()
+{
+	QMap< QString, QVariant > params;
+
+	params["state"] = QString(saveState().toBase64());
+
+	params["f_common"] = ui->dsb_common_force->value();
+	params["f1"] = ui->dsb_f1->value();
+	params["f2"] = ui->dsb_f2->value();
+	params["f3"] = ui->dsb_f3->value();
+	params["f4"] = ui->dsb_f4->value();
+	params["height"] = ui->dsb_height->value();
+
+	SimpleXML::save_param(config_main, params);
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -97,6 +159,53 @@ void MainWindow::on_pb_height_goal_clicked(bool checked)
 }
 
 void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
+{
+}
+
+void MainWindow::on_pb_use_forces_clicked(bool checked)
+{
+	ui->widgetView->model().setUseMultipleForces(checked);
+	ui->widgetView->model().setForces(ui->dsb_f1->value(),
+									  ui->dsb_f2->value(),
+									  ui->dsb_f3->value(),
+									  ui->dsb_f4->value());
+}
+
+void MainWindow::on_dsb_f1_valueChanged(double arg1)
+{
+	ui->widgetView->model().setForce(1, arg1);
+}
+
+void MainWindow::on_dsb_f2_valueChanged(double arg1)
+{
+	ui->widgetView->model().setForce(2, arg1);
+}
+
+void MainWindow::on_dsb_f3_valueChanged(double arg1)
+{
+	ui->widgetView->model().setForce(3, arg1);
+}
+
+void MainWindow::on_dsb_f4_valueChanged(double arg1)
+{
+	ui->widgetView->model().setForce(4, arg1);
+}
+
+void MainWindow::on_pb_rese_angles_clicked()
+{
+	ui->widgetView->model().reset_angles();
+	ui->pb_use_forces->setChecked(false);
+}
+
+void MainWindow::on_dsb_common_force_valueChanged(double arg1)
+{
+	ui->dsb_f1->setValue(arg1);
+	ui->dsb_f2->setValue(arg1);
+	ui->dsb_f3->setValue(arg1);
+	ui->dsb_f4->setValue(arg1);
+}
+
+void MainWindow::on_dsb_height_valueChanged(double arg1)
 {
 	ui->widgetView->setHeightGoal(arg1);
 }

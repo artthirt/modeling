@@ -55,6 +55,22 @@ public:
 	void setSimpleHeightControl(bool val);
 	void setHeightGoal(float h);
 
+	void setTangageGoal(float v);
+	void setRollGoal(float v);
+	void setYawGoal(float v);
+
+	void setForces(float f1, float f2, float f3, float f4);
+	void setForce(int index, float v);
+	void setUseMultipleForces(bool f);
+
+	void reset_angles();
+
+	void setYaw(float v);
+	void setRoll(float v);
+	void setTangage(float v);
+
+	ct::Vec3f direction_force() const;
+
 private:
 	ct::Vec3f m_pos;
 	ct::Vec3f m_vel;
@@ -67,6 +83,8 @@ private:
 	bool m_useSimpleHeightControl;
 	float m_heightGoal;
 
+	bool m_useMultipleForces;
+
 	float m_mass;
 	float m_force;
 
@@ -76,14 +94,37 @@ private:
 	float m_kp_angle;
 	float m_kd_angle;
 
+	/**
+	 * @brief m_angles_goal
+	 * [0] = tangage
+	 * [1] = roll
+	 * [2] = yaw
+	 */
+	ct::Vec3f m_angles_goal;
+
+	void calculate_angles();
+
 	void simpleHeightControl(const ct::Vec3f& normal);
 
 private:
 	float prev_e;
 	float e_I;
 
+	ct::Vec3f prev_angles_e;
+
+	float m_force_1;
+	float m_force_2;
+	float m_force_3;
+	float m_force_4;
+	float m_arm;
+
+	ct::Vec3f m_direction_force;
+
 private:
 	VObjContainer m_container;
 };
+
+const float virtual_z_edge = 50.;
+const float virtual_xy_edge = 15.;
 
 #endif // MODEL_H
