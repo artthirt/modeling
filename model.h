@@ -103,6 +103,9 @@ private:
 	ct::Vec3f m_angles_goal;
 
 	void calculate_angles();
+	void state_model_angles();
+	void state_model_position(ct::Vec3f &force_direction);
+
 
 	void simpleHeightControl(const ct::Vec3f& normal);
 

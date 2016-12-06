@@ -38,57 +38,13 @@ Model::Model()
 
 void Model::calulcate()
 {
-	Vec3f vel(0, 0, 1);
+	Vec3f force_direction;
+
+	state_model_angles();
+	state_model_position(force_direction);
 
 	calculate_angles();
-
-	Matf m = get_eiler_mat(m_angles);
-	m = m.t();
-
-	//push_log("eiler:\n" + m.operator std::string());
-
-	Matf mv = m * vel;
-
-	//push_log("mult to vec:\n" + mv.operator std::string());
-
-	vel = mv.toVec<3>();
-	m_direction_force = vel;
-
-	simpleHeightControl(vel);
-
-	//push_log("from mat: " + vel.operator std::string());
-	vel *= (m_force/m_mass * m_dt);
-
-	m_vel += vel;
-
-	m_vel += Vec3f(0.f, 0.f, -m_mass * gravity * m_dt);
-
-	m_vel *= attenuation;
-
-	push_log("after force: " + m_vel.operator std::string());
-
-	m_pos += m_vel;
-
-	m_angles += m_angles_vel;
-
-
-	if(m_pos[2] < 0){
-		m_pos[2] = 0;
-		m_vel = Vec3f::zeros();
-		cout << "break\n";
-	}
-
-	if(m_pos[2] > virtual_z_edge){
-		m_pos[2] = virtual_z_edge;
-	}
-	Vec3f f = m_pos;
-	f[2] = 0;
-	if(f.norm() > virtual_xy_edge){
-		f /= f.norm();
-		f *= virtual_xy_edge;
-		m_pos[0] = f[0];
-		m_pos[1] = f[1];
-	}
+	simpleHeightControl(force_direction);
 
 }
 
@@ -335,6 +291,11 @@ void Model::calculate_angles()
 //	Vec3f arm_3(m_arm, -m_arm, 0);
 //	Vec3f arm_4(-m_arm, m_arm, 0);
 
+
+}
+
+void Model::state_model_angles()
+{
 	float df_12 = m_force_1 - m_force_2;
 	float df_34 = m_force_3 - m_force_4;
 
@@ -369,6 +330,59 @@ void Model::calculate_angles()
 	m_force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
 }
 
+void Model::state_model_position(Vec3f &force_direction)
+{
+	Vec3f vel(0, 0, 1);
+
+	Matf m = get_eiler_mat(m_angles);
+	m = m.t();
+
+	//push_log("eiler:\n" + m.operator std::string());
+
+	Matf mv = m * vel;
+
+	//push_log("mult to vec:\n" + mv.operator std::string());
+
+	vel = mv.toVec<3>();
+	m_direction_force = vel;
+
+	force_direction = vel;
+
+	//push_log("from mat: " + vel.operator std::string());
+	vel *= (m_force/m_mass * m_dt);
+
+	m_vel += vel;
+
+	m_vel += Vec3f(0.f, 0.f, -m_mass * gravity * m_dt);
+
+	m_vel *= attenuation;
+
+	push_log("after force: " + m_vel.operator std::string());
+
+	m_pos += m_vel;
+
+	m_angles += m_angles_vel;
+
+
+	if(m_pos[2] < 0){
+		m_pos[2] = 0;
+		m_vel = Vec3f::zeros();
+		cout << "break\n";
+	}
+
+	if(m_pos[2] > virtual_z_edge){
+		m_pos[2] = virtual_z_edge;
+	}
+	Vec3f f = m_pos;
+	f[2] = 0;
+	if(f.norm() > virtual_xy_edge){
+		f /= f.norm();
+		f *= virtual_xy_edge;
+		m_pos[0] = f[0];
+		m_pos[1] = f[1];
+	}
+}
+
 void Model::simpleHeightControl(const Vec3f &normal)
 {
 	if(!m_useSimpleHeightControl)
@@ -396,5 +410,9 @@ void Model::simpleHeightControl(const Vec3f &normal)
 
 	u = std::max(0.f, std::min(m_max_force, u));
 
-	m_force = m_mass * u;
+	float force = m_mass * u;
+	m_force_1 = force / 4;
+	m_force_2 = force / 4;
+	m_force_3 = force / 4;
+	m_force_4 = force / 4;
 }
