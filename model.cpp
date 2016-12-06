@@ -280,6 +280,55 @@ void Model::calculate_angles()
 	/// [1] - roll
 	/// [2] - yaw
 	ct::Vec3f e = m_angles_goal - m_angles;
+	e = crop_angles(e);
+
+	const float kp = 1;
+	const float kd = 2;
+
+	Vec3f de = e - prev_angles_e;
+	de = crop_angles(de);
+	prev_angles_e = e;
+
+	Vec3f u = e * kp + de * kd;
+
+	//u = sign(u) * (u * u);
+	u *= m_mass * m_dt;
+
+	float avg_f = m_force/4;
+	avg_f /= 4.;
+	/// f1 + f3 -> -tangage
+	///	f2 + f4 -> +tangage
+	///	f1 + f4 -> -roll
+	/// f3 + f2 -> +roll
+	/// f1 + f2 > f2 + f4 -> +yaw
+	/// f1 + f2 < f2 + f4 -> -yaw
+
+	m_force_1 = avg_f + u[0];
+	m_force_3 = avg_f + u[0];
+	m_force_2 = avg_f - u[0];
+	m_force_4 = avg_f - u[0];
+
+//	m_force_1 = /*avg_f*/ - u[1]/4;
+//	m_force_4 = /*avg_f*/ - u[1]/4;
+//	m_force_3 = /*avg_f*/ + u[1]/4;
+//	m_force_2 = /*avg_f*/ + u[1]/4;
+
+//	m_force_1 = /*avg_f*/ - u[2]/4;
+//	m_force_2 = /*avg_f*/ - u[2]/4;
+//	m_force_4 = /*avg_f*/ + u[2]/4;
+//	m_force_2 = /*avg_f*/ + u[2]/4;
+
+	m_force_1 = std::max(0.f, m_force_1);
+	m_force_2 = std::max(0.f, m_force_2);
+	m_force_3 = std::max(0.f, m_force_3);
+	m_force_4 = std::max(0.f, m_force_4);
+
+	m_force_1 = std::min(m_max_force, m_force_1);
+	m_force_2 = std::min(m_max_force, m_force_2);
+	m_force_3 = std::min(m_max_force, m_force_3);
+	m_force_4 = std::min(m_max_force, m_force_4);
+//	u /= (m_mass * m_arm);
+//	Vec3f w = sign(u) * sqrt(u);
 
 //	Vec3f arm_1(m_arm, m_arm, 0);
 //	Vec3f arm_2(-m_arm, -m_arm, 0);

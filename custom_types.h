@@ -162,7 +162,7 @@ public:
 		for(int i = 0; i < count; i++){
 			ret += val[i] * val[i];
 		}
-		return sqrt(ret);
+		return ::sqrt(ret);
 	}
 	T dot(const Vec_<T, count>& v) const{
 		T ret = 0;
@@ -299,6 +299,76 @@ Vec_<T, count> operator/ (const Vec_<T, count>& v1, T v2)
 		ret.val[i] = v1.val[i] / v2;
 	}
 	return ret;
+}
+
+template<typename T, int count>
+Vec_<T, count> max (const Vec_<T, count>& v1, T v2)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res[i] = std::max(v1.val[i], v2);
+	}
+	return res;
+}
+
+template<typename T, int count>
+Vec_<T, count> min (const Vec_<T, count>& v1, T v2)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res[i] = std::min(v1.val[i], v2);
+	}
+	return res;
+}
+
+template<typename T, int count>
+Vec_<T, count> min (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res[i] = std::min(v1.val[i], v2.val[i]);
+	}
+	return res;
+}
+
+template<typename T, int count>
+Vec_<T, count> max (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res[i] = std::max(v1.val[i], v2.val[i]);
+	}
+	return res;
+}
+
+template<typename T, int count>
+Vec_<T, count> sign(const Vec_<T, count>& v1)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res.val[i] = v1.val[i] >= 0? 1 : -1;
+	}
+	return res;
+}
+
+template<typename T, int count>
+Vec_<T, count> sqrt(const Vec_<T, count>& v1)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res[i] = sqrt(v1.val[i]);
+	}
+	return res;
+}
+
+template<typename T, int count>
+Vec_<T, count> crop_angles(const Vec_<T, count>& v1)
+{
+	Vec_<T, count > res;
+	for(int i = 0; i < count; i++){
+		res[i] = atan2(sin(v1.val[i]), cos(v1.val[i]));
+	}
+	return res;
 }
 
 typedef Vec_<float, 3> Vec3f;
