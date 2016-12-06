@@ -411,8 +411,23 @@ void Model::simpleHeightControl(const Vec3f &normal)
 	u = std::max(0.f, std::min(m_max_force, u));
 
 	float force = m_mass * u;
-	m_force_1 = force / 4;
-	m_force_2 = force / 4;
-	m_force_3 = force / 4;
-	m_force_4 = force / 4;
+
+	float part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+
+	if(part_f > 0){
+		float pf1 = m_force_1 / part_f;
+		float pf2 = m_force_2 / part_f;
+		float pf3 = m_force_3 / part_f;
+		float pf4 = m_force_4 / part_f;
+
+		m_force_1 = pf1 * force;
+		m_force_2 = pf2 * force;
+		m_force_3 = pf3 * force;
+		m_force_4 = pf4 * force;
+	}else{
+		m_force_1 = force / 4;
+		m_force_2 = force / 4;
+		m_force_3 = force / 4;
+		m_force_4 = force / 4;
+	}
 }
