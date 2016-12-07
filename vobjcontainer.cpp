@@ -25,15 +25,25 @@ bool VObjContainer::open(const std::string &fn)
 
 	std::string dir;
 
+//	{
+//		QString t = QString(fn.c_str());
+//		int i = t.lastIndexOf("/");
+//		if(i < 0){
+//			i = t.lastIndexOf("\\");
+//		}
+//		if(i >= 0){
+//			QStringRef tr = t.leftRef(i);
+//			dir = tr.toString().toStdString();
+//		}
+//	}
+
 	{
-		QString t = QString(fn.c_str());
-		int i = t.lastIndexOf("/");
-		if(i < 0){
-			i = t.lastIndexOf("\\");
+		size_t i = fn.find_last_of('/');
+		if(i == string::npos){
+			i = fn.find_last_of('\\');
 		}
-		if(i >= 0){
-			QStringRef tr = t.leftRef(i);
-			dir = tr.toString().toStdString();
+		if(i != string::npos){
+			dir = fn.substr(0, i);
 		}
 	}
 
