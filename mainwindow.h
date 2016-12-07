@@ -69,6 +69,8 @@ private slots:
 
 	void on_actionLog_triggered();
 
+	void onChangeValue(float x, float y);
+
 private:
 	Ui::MainWindow *ui;
 

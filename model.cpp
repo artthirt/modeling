@@ -9,7 +9,7 @@ using namespace std;
 const float gravity = 9.8f;
 const int maximum_logs = 1000;
 
-const float attenuation = 0.9;
+const float attenuation = 0.85;
 
 Model::Model()
 	: m_useSimpleHeightControl(0)
@@ -270,8 +270,8 @@ void Model::calculate_angles()
 	ct::Vec3f e = m_angles_goal - m_angles;
 	e = crop_angles(e);
 
-	const float kp = 30;
-	const float kd = 50;
+	const float kp = 10;
+	const float kd = 20;
 
 	Vec3f de = e - prev_angles_e;
 	de = crop_angles(de);

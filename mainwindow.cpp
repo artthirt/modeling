@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect(ui->widgetView, SIGNAL(push_logs(QString)), this, SLOT(onPushLog(QString)));
 
+	connect(ui->widget_joystick, SIGNAL(valueChanged(float,float)), this, SLOT(onChangeValue(float,float)));
+
 	load_xml();
 
 	ui->hs_yaw->setValue(ui->widgetView->yaw() / 180. * ui->hs_yaw->maximum());
@@ -233,4 +235,15 @@ void MainWindow::on_actionControl_triggered()
 void MainWindow::on_actionLog_triggered()
 {
 	ui->dw_log->show();
+}
+
+void MainWindow::onChangeValue(float x, float y)
+{
+	x = x / ui->widget_joystick->radius();
+	y = y / ui->widget_joystick->radius();
+
+	ui->widgetView->model().setTangageGoal(-y * 20);
+	ui->widgetView->model().setRollGoal(-x * 20);
+	//ui->hs_tangage_goal->setValue(y * ui->hs_tangage_goal->maximum());
+	//ui->hs_roll_goal->setValue(x * ui->hs_roll_goal->maximum());
 }

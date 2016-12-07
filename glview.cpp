@@ -73,6 +73,7 @@ GLView::GLView(QWidget *parent) :
   , m_current_z(0)
   , m_color_space(ct::Vec3f::ones())
   , m_tracking(false)
+  , m_tracking_angle(0)
 {
 	ui->setupUi(this);
 
@@ -401,11 +402,22 @@ void GLView::glDraw()
 
 	if(m_tracking){
 //		ct::Vec3f ps = m_model.pos();
-//		ct::Vec3f dm = m_model.direct_model();
+		ct::Vec3f dm = m_model.direct_model();
+
+		float kp = 0.1;
+
+		dm[2] = 0;
+		dm /= dm.norm();
+		float angle = M_PI/2 - atan2(dm[1], dm[0]);
+		float e = angle - ct::angle2rad(m_tracking_angle);
+		e = atan2(sin(e), cos(e));
+		float u = kp * e;
+		m_tracking_angle += ct::rad2angle(u);
 //		gluLookAt(ps[0], ps[1], ps[2], ps[0] + dm[0], ps[1] + dm[1], ps[2] + dm[2], 0, 0, 1);
 		glTranslatef(0, 0, - (m_current_z + m_delta_z));
 		glRotatef(m_delta_pt.x(), 0, 1, 0);
 		glRotatef(m_delta_pt.y(), 1, 0, 0);
+		glRotatef(m_tracking_angle, 0, 0, 1);
 		glTranslatef(-m_model.pos()[0], -m_model.pos()[1], -m_model.pos()[2]);
 	}
 

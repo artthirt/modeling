@@ -45,6 +45,7 @@ private:
 	bool m_update;
 
 	bool m_tracking;
+	float m_tracking_angle;
 
 	QTimer m_timer;
 	QTimer m_timer_model;

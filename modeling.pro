@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     model.cpp \
     vobjcontainer.cpp \
     simple_xml.cpp \
-    customslider.cpp
+    customslider.cpp \
+    joystickemulate.cpp
 
 HEADERS  += mainwindow.h \
     glview.h \
@@ -37,7 +38,8 @@ HEADERS  += mainwindow.h \
     custom_types.h \
     vobjcontainer.h \
     simple_xml.hpp \
-    customslider.h
+    customslider.h \
+    joystickemulate.h
 
 FORMS    += mainwindow.ui \
     glview.ui
