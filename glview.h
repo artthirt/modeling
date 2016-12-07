@@ -35,10 +35,16 @@ public:
 	void setUseHeightGoal(bool val);
 	void setHeightGoal(float h);
 
+	void set_tracking(bool v);
+
+	void set_update();
+
 private:
 	Ui::GLView *ui;
 	bool m_init;
 	bool m_update;
+
+	bool m_tracking;
 
 	QTimer m_timer;
 	QTimer m_timer_model;

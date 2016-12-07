@@ -28,14 +28,16 @@ SOURCES += main.cpp\
     glview.cpp \
     model.cpp \
     vobjcontainer.cpp \
-    simple_xml.cpp
+    simple_xml.cpp \
+    customslider.cpp
 
 HEADERS  += mainwindow.h \
     glview.h \
     model.h \
     custom_types.h \
     vobjcontainer.h \
-    simple_xml.hpp
+    simple_xml.hpp \
+    customslider.h
 
 FORMS    += mainwindow.ui \
     glview.ui

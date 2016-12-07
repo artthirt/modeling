@@ -55,13 +55,18 @@ public:
 	void setSimpleHeightControl(bool val);
 	void setHeightGoal(float h);
 
+	float tangageFloat() const;
 	void setTangageGoal(float v);
+	float rollGoal() const;
 	void setRollGoal(float v);
+	float yawGoal() const;
 	void setYawGoal(float v);
 
 	void setForces(float f1, float f2, float f3, float f4);
 	void setForce(int index, float v);
 	void setUseMultipleForces(bool f);
+
+	float force(int index);
 
 	void reset_angles();
 
@@ -70,6 +75,7 @@ public:
 	void setTangage(float v);
 
 	ct::Vec3f direction_force() const;
+	ct::Vec3f direct_model() const;
 
 private:
 	ct::Vec3f m_pos;
@@ -106,7 +112,6 @@ private:
 	void state_model_angles();
 	void state_model_position(ct::Vec3f &force_direction);
 
-
 	void simpleHeightControl(const ct::Vec3f& normal);
 
 private:
@@ -122,6 +127,7 @@ private:
 	float m_arm;
 
 	ct::Vec3f m_direction_force;
+	ct::Vec3f m_direct_model;
 
 private:
 	VObjContainer m_container;

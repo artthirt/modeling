@@ -72,6 +72,7 @@ GLView::GLView(QWidget *parent) :
   , m_delta_z(0)
   , m_current_z(0)
   , m_color_space(ct::Vec3f::ones())
+  , m_tracking(false)
 {
 	ui->setupUi(this);
 
@@ -106,23 +107,23 @@ Model &GLView::model()
 
 void GLView::set_yaw(float v)
 {
-	m_angles[2] = v;
+	m_angles[2] = ct::angle2rad(v);
 	m_model.setYaw(v);
-	m_update = true;
+	set_update();
 }
 
 void GLView::set_tangage(float v)
 {
-	m_angles[0] = v;
+	m_angles[0] = ct::angle2rad(v);
 	m_model.setTangage(v);
-	m_update = true;
+	set_update();
 }
 
 void GLView::set_roll(float v)
 {
-	m_angles[1] = v;
+	m_angles[1] = ct::angle2rad(v);
 	m_model.setRoll(v);
-	m_update = true;
+	set_update();
 }
 
 float GLView::yaw() const
@@ -143,7 +144,7 @@ float GLView::roll() const
 void GLView::set_force(float f)
 {
 	m_model.set_force(f);
-	m_update = true;
+	set_update();
 }
 
 void GLView::setUseHeightGoal(bool val)
@@ -154,6 +155,17 @@ void GLView::setUseHeightGoal(bool val)
 void GLView::setHeightGoal(float h)
 {
 	m_model.setHeightGoal(h);
+	set_update();
+}
+
+void GLView::set_tracking(bool v)
+{
+	m_tracking = v;
+	set_update();
+}
+
+void GLView::set_update()
+{
 	m_update = true;
 }
 
@@ -288,13 +300,13 @@ void GLView::load_xml()
 	m_color_space[1] = params["color_space_g"].toFloat();
 	m_color_space[2] = params["color_space_b"].toFloat();
 
-	m_angles[0] = params["tangage"].toFloat();
-	m_angles[1] = params["roll"].toFloat();
-	m_angles[2] = params["yaw"].toFloat();
+//	m_angles[0] = params["tangage"].toFloat();
+//	m_angles[1] = params["roll"].toFloat();
+	m_angles[2] = ct::angle2rad(params["yaw"].toFloat());
 
-	m_model.setTangage(m_angles[0]);
-	m_model.setRoll(m_angles[1]);
-	m_model.setYaw(m_angles[2]);
+	m_model.setYaw(params["yaw"].toFloat());
+
+	m_model.setYawGoal(params["goal_yaw"].toFloat());
 }
 
 void GLView::save_xml()
@@ -310,9 +322,10 @@ void GLView::save_xml()
 	params["color_space_g"] = m_color_space[1];
 	params["color_space_b"] = m_color_space[2];
 
-	params["tangage"] = m_angles[0];
-	params["roll"] = m_angles[1];
-	params["yaw"] = m_angles[2];
+//	params["tangage"] = m_angles[0];
+//	params["roll"] = m_angles[1];
+	params["yaw"] = ct::rad2angle(m_angles[2]);
+	params["goal_yaw"] = m_model.yawGoal();
 
 	SimpleXML::save_param(xml_config, params);
 }
@@ -377,10 +390,24 @@ void GLView::glDraw()
 
 	glTranslatef(0, 0, -5);
 
-	glTranslatef(0, 0, -(m_current_z + m_delta_z));
+	if(!m_tracking){
+		glTranslatef(0, 0, -(m_current_z + m_delta_z));
 
-	glRotatef(m_delta_pt.x(), 0, 1, 0);
-	glRotatef(m_delta_pt.y(), 1, 0, 0);
+		glRotatef(m_delta_pt.x(), 0, 1, 0);
+		glRotatef(m_delta_pt.y(), 1, 0, 0);
+	}else{
+	}
+
+
+	if(m_tracking){
+//		ct::Vec3f ps = m_model.pos();
+//		ct::Vec3f dm = m_model.direct_model();
+//		gluLookAt(ps[0], ps[1], ps[2], ps[0] + dm[0], ps[1] + dm[1], ps[2] + dm[2], 0, 0, 1);
+		glTranslatef(0, 0, - (m_current_z + m_delta_z));
+		glRotatef(m_delta_pt.x(), 0, 1, 0);
+		glRotatef(m_delta_pt.y(), 1, 0, 0);
+		glTranslatef(-m_model.pos()[0], -m_model.pos()[1], -m_model.pos()[2]);
+	}
 
 	draw_net();
 
@@ -424,13 +451,13 @@ void GLView::mouseMoveEvent(QMouseEvent *event)
 		m_delta_pt += pt;
 		m_mouse_pt = event->pos();
 
-		m_update = true;
+		set_update();
 	}
 	if(event->buttons().testFlag(Qt::MiddleButton)){
 		QPointF pt = event->pos() - m_wheel_pt;
 
 		m_delta_z = pt.y();
 
-		m_update = true;
+		set_update();
 	}
 }

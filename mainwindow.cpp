@@ -27,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->hs_yaw->setValue(ui->widgetView->yaw() / 180. * ui->hs_yaw->maximum());
 	ui->hs_roll->setValue(ui->widgetView->roll() / 180. * ui->hs_roll->maximum());
 	ui->hs_tangage->setValue(ui->widgetView->tangage() / 180. * ui->hs_tangage->maximum());
+
+	ui->hs_yaw_goal->setValue(ui->widgetView->model().yawGoal() / 180. * ui->hs_yaw_goal->maximum());
 }
 
 MainWindow::~MainWindow()
@@ -38,32 +40,32 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_hs_yaw_valueChanged(int value)
 {
-	ui->widgetView->set_yaw(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+	ui->widgetView->set_yaw(180. * value/ui->hs_yaw->maximum());
 }
 
 void MainWindow::on_hs_tangage_valueChanged(int value)
 {
-	ui->widgetView->set_tangage(ct::angle2rad(180. * value/ui->hs_tangage->maximum()));
+	ui->widgetView->set_tangage(180. * value/ui->hs_tangage->maximum());
 }
 
 void MainWindow::on_hs_roll_valueChanged(int value)
 {
-	ui->widgetView->set_roll(ct::angle2rad(180. * value/ui->hs_roll->maximum()));
+	ui->widgetView->set_roll(180. * value/ui->hs_roll->maximum());
 }
 
 void MainWindow::on_hs_yaw_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setYawGoal(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+	ui->widgetView->model().setYawGoal(180. * value/ui->hs_yaw->maximum());
 }
 
 void MainWindow::on_hs_tangage_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setTangageGoal(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+	ui->widgetView->model().setTangageGoal(180. * value/ui->hs_yaw->maximum());
 }
 
 void MainWindow::on_hs_roll_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setRollGoal(ct::angle2rad(180. * value/ui->hs_yaw->maximum()));
+	ui->widgetView->model().setRollGoal(180. * value/ui->hs_yaw->maximum());
 }
 
 void MainWindow::load_xml()
@@ -139,6 +141,14 @@ void MainWindow::onTimeout()
 	}
 	if(m_force < 0)
 		m_force = 0;
+
+	ui->lb_roll->setText(QString::number(1. * ui->hs_roll_goal->value() / ui->hs_roll_goal->maximum() * 180., 'f', 2));
+	ui->lb_tangage->setText(QString::number(1. * ui->hs_tangage_goal->value() / ui->hs_tangage_goal->maximum() * 180., 'f', 2));
+
+	ui->lb_f1->setText(QString::number(ui->widgetView->model().force(1), 'f', 3));
+	ui->lb_f2->setText(QString::number(ui->widgetView->model().force(2), 'f', 3));
+	ui->lb_f3->setText(QString::number(ui->widgetView->model().force(3), 'f', 3));
+	ui->lb_f4->setText(QString::number(ui->widgetView->model().force(4), 'f', 3));
 }
 
 void MainWindow::onPushLog(const QString &val)
@@ -208,4 +218,19 @@ void MainWindow::on_dsb_common_force_valueChanged(double arg1)
 void MainWindow::on_dsb_height_valueChanged(double arg1)
 {
 	ui->widgetView->setHeightGoal(arg1);
+}
+
+void MainWindow::on_chb_tracking_clicked(bool checked)
+{
+	ui->widgetView->set_tracking(checked);
+}
+
+void MainWindow::on_actionControl_triggered()
+{
+	ui->dw_control->show();
+}
+
+void MainWindow::on_actionLog_triggered()
+{
+	ui->dw_log->show();
 }

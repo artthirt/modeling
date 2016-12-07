@@ -9,13 +9,13 @@ using namespace std;
 const float gravity = 9.8f;
 const int maximum_logs = 1000;
 
-const float attenuation = 0.95;
+const float attenuation = 0.9;
 
 Model::Model()
 	: m_useSimpleHeightControl(0)
 	, m_heightGoal(8)
 	, m_useMultipleForces(false)
-
+	, m_direct_model(1, 0, 0)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -141,19 +141,34 @@ void Model::setHeightGoal(float h)
 	m_heightGoal = h;
 }
 
+float Model::tangageFloat() const
+{
+	return rad2angle(m_angles_goal[0]);
+}
+
 void Model::setTangageGoal(float v)
 {
-	m_angles_goal[0] = v;
+	m_angles_goal[0] = angle2rad(v);
+}
+
+float Model::rollGoal() const
+{
+	return rad2angle(m_angles_goal[1]);
 }
 
 void Model::setRollGoal(float v)
 {
-	m_angles_goal[1] = v;
+	m_angles_goal[1] = angle2rad(v);
+}
+
+float Model::yawGoal() const
+{
+	return rad2angle(m_angles_goal[2]);
 }
 
 void Model::setYawGoal(float v)
 {
-	m_angles_goal[2] = v;
+	m_angles_goal[2] = angle2rad(v);
 }
 
 void Model::setForces(float f1, float f2, float f3, float f4)
@@ -196,6 +211,18 @@ void Model::setUseMultipleForces(bool f)
 	m_force = 0.0001;
 }
 
+float Model::force(int index)
+{
+	if(index == 1)
+		return m_force_1;
+	if(index == 2)
+		return m_force_2;
+	if(index == 3)
+		return m_force_3;
+	if(index == 4)
+		return m_force_4;
+}
+
 void Model::reset_angles()
 {
 	m_angles = Vec3f::zeros();
@@ -209,22 +236,27 @@ void Model::reset_angles()
 
 void Model::setYaw(float v)
 {
-	m_angles[2] = v;
+	m_angles[2] = angle2rad(v);
 }
 
 void Model::setRoll(float v)
 {
-	m_angles[1] = v;
+	m_angles[1] = angle2rad(v);
 }
 
 void Model::setTangage(float v)
 {
-	m_angles[0] = v;
+	m_angles[0] = angle2rad(v);
 }
 
 Vec3f Model::direction_force() const
 {
 	return m_direction_force;
+}
+
+Vec3f Model::direct_model() const
+{
+	return m_direct_model;
 }
 
 void Model::calculate_angles()
@@ -238,8 +270,8 @@ void Model::calculate_angles()
 	ct::Vec3f e = m_angles_goal - m_angles;
 	e = crop_angles(e);
 
-	const float kp = 1;
-	const float kd = 2;
+	const float kp = 30;
+	const float kd = 50;
 
 	Vec3f de = e - prev_angles_e;
 	de = crop_angles(de);
@@ -250,8 +282,7 @@ void Model::calculate_angles()
 	//u = sign(u) * (u * u);
 	u *= m_mass * m_dt;
 
-	float avg_f = m_force/4;
-	avg_f /= 4.;
+	float avg_f = m_force;
 	/// f1 + f3 -> -tangage
 	///	f2 + f4 -> +tangage
 	///	f1 + f4 -> -roll
@@ -259,10 +290,23 @@ void Model::calculate_angles()
 	/// f1 + f2 > f2 + f4 -> +yaw
 	/// f1 + f2 < f2 + f4 -> -yaw
 
-	m_force_1 = avg_f + u[0];
-	m_force_3 = avg_f + u[0];
-	m_force_2 = avg_f - u[0];
-	m_force_4 = avg_f - u[0];
+	u /= 4;
+
+	m_force_1 = avg_f/4 + u[0] - u[1] + u[2];
+	m_force_3 = avg_f/4 + u[0] + u[1] - u[2];
+	m_force_2 = avg_f/4 - u[0] + u[1] + u[2];
+	m_force_4 = avg_f/4 - u[0] - u[1] - u[2];
+
+	float part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	float pf1 = m_force_1/part_f;
+	float pf2 = m_force_2/part_f;
+	float pf3 = m_force_3/part_f;
+	float pf4 = m_force_4/part_f;
+
+	m_force_1 = pf1 * m_force;
+	m_force_2 = pf2 * m_force;
+	m_force_3 = pf3 * m_force;
+	m_force_4 = pf4 * m_force;
 
 //	m_force_1 = /*avg_f*/ - u[1]/4;
 //	m_force_4 = /*avg_f*/ - u[1]/4;
@@ -333,6 +377,7 @@ void Model::state_model_angles()
 void Model::state_model_position(Vec3f &force_direction)
 {
 	Vec3f vel(0, 0, 1);
+	Vec3f direct_model(1, 0, 0);
 
 	Matf m = get_eiler_mat(m_angles);
 	m = m.t();
@@ -348,6 +393,9 @@ void Model::state_model_position(Vec3f &force_direction)
 
 	force_direction = vel;
 
+	mv = m * direct_model;
+
+	m_direct_model = mv.toVec<3>();
 	//push_log("from mat: " + vel.operator std::string());
 	vel *= (m_force/m_mass * m_dt);
 

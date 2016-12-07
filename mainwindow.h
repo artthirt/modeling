@@ -63,6 +63,12 @@ private slots:
 
 	void on_dsb_height_valueChanged(double arg1);
 
+	void on_chb_tracking_clicked(bool checked);
+
+	void on_actionControl_triggered();
+
+	void on_actionLog_triggered();
+
 private:
 	Ui::MainWindow *ui;
 
