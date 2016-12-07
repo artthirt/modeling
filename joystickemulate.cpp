@@ -1,6 +1,7 @@
 #include "joystickemulate.h"
 #include <QMouseEvent>
 #include <QPainter>
+#include <math.h>
 
 const float r_cyrc = 10.;
 
