@@ -173,6 +173,10 @@ void GLView::set_update()
 void GLView::init()
 {
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	glFrontFace(GL_FRONT);
+
 	glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
@@ -253,12 +257,23 @@ void GLView::draw_model()
 		if(!obj.v.size())
 			continue;
 
+		const std::map< std::string, Mtl > &mtls = obj.mtls;
+
 		const std::vector< ct::Vec3f> &_v = obj.v;
 		const std::vector< ct::Vec3f> &_vn = obj.vn;
 
 		for(auto itf = obj.faces.begin(); itf != obj.faces.end(); itf++){
 
 			const VObj::Faces& faces = *itf;
+
+			auto mtlIt = mtls.find((std::string)faces.usemtl);
+			if(mtlIt != mtls.end()){
+				const Mtl mtl = (*mtlIt).second;
+
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, mtl.Kd.val);
+				glMaterialfv(GL_FRONT, GL_AMBIENT, mtl.Ka.val);
+				glMaterialfv(GL_FRONT, GL_SPECULAR, mtl.Ks.val);
+			}
 
 			const std::vector< std::vector< int > > & fv = faces.fv;
 			const std::vector< std::vector< int > > & fn = faces.fn;
@@ -385,9 +400,10 @@ void GLView::glDraw()
 	glClearColor(m_color_space[0], m_color_space[1], m_color_space[2], 1);
 	glLoadIdentity();
 
-	const float poslight[] = {0, 0, 10, 1};
-
-	glLightfv(GL_LIGHT0, GL_POSITION, poslight);
+	const float poslight[] = {100, 100, 100, 1};
+	const float alight[] = {0.01, 0.01, 0.01, 1};
+	const float slight[] = {0.3, 0.3, 0.3, 1};
+	const float dlight[] = {0.7, 0.7, 0.7, 1};
 
 	glTranslatef(0, 0, -5);
 
@@ -420,6 +436,12 @@ void GLView::glDraw()
 		glRotatef(m_tracking_angle, 0, 0, 1);
 		glTranslatef(-m_model.pos()[0], -m_model.pos()[1], -m_model.pos()[2]);
 	}
+
+	glLightfv(GL_LIGHT0, GL_POSITION, poslight);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, alight);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, slight);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, dlight);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 10);
 
 	draw_net();
 

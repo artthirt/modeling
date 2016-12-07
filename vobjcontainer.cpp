@@ -23,6 +23,20 @@ bool VObjContainer::open(const std::string &fn)
 	if(!fs.is_open())
 		return false;
 
+	std::string dir;
+
+	{
+		QString t = QString(fn.c_str());
+		int i = t.lastIndexOf("/");
+		if(i < 0){
+			i = t.lastIndexOf("\\");
+		}
+		if(i >= 0){
+			QStringRef tr = t.leftRef(i);
+			dir = tr.toString().toStdString();
+		}
+	}
+
 	string str;
 
 	VObj obj;
@@ -38,6 +52,10 @@ bool VObjContainer::open(const std::string &fn)
 		if(sl.size()){
 
 
+			if(sl[0] == "mtllib"){
+				obj.mtlfile = sl[1].toStdString();
+				continue;
+			}
 			if(sl[0] == "o"){
 
 				if(created){
@@ -51,16 +69,23 @@ bool VObjContainer::open(const std::string &fn)
 
 				faces.name = sl[1].toStdString();
 				created = true;
+				continue;
+			}
+			if(sl[0] == "usemtl"){
+				faces.usemtl = sl[1].toStdString();
+				continue;
 			}
 			if(sl[0] == "v"){
 				obj.v.push_back(Vec3f(sl[1].toFloat(),
 								sl[2].toFloat(),
 								sl[3].toFloat()));
+				continue;
 			}
 			if(sl[0] == "vn"){
 				obj.vn.push_back(Vec3f(sl[1].toFloat(),
 								sl[2].toFloat(),
 								sl[3].toFloat()));
+				continue;
 			}
 			if(sl[0] == "f"){
 				std::vector< int > fvi;
@@ -82,9 +107,12 @@ bool VObjContainer::open(const std::string &fn)
 				faces.fv.push_back(fvi);
 				faces.ft.push_back(fti);
 				faces.fn.push_back(fni);
+				continue;
 			}
 		}
 	}
+
+	fs.close();
 
 	if(created && !obj.v.empty()){
 		obj.faces.push_back(faces);
@@ -93,6 +121,8 @@ bool VObjContainer::open(const std::string &fn)
 
 	for(auto it = m_vobjs.begin(); it != m_vobjs.end(); it++){
 		VObj& obj = *it;
+
+		obj.openmtl(dir);
 
 		size_t cnt = obj.v.size();
 		for(auto it = obj.faces.begin(); it != obj.faces.end(); it++){
@@ -139,6 +169,74 @@ void VObj::clear()
 	v.clear();
 	vn.clear();
 	t.clear();
+}
+
+void VObj::openmtl(const string dir)
+{
+	if(mtlfile.empty())
+		return;
+
+	std::string fn = dir + "/" + mtlfile;
+
+	std::fstream fs;
+	fs.open(fn.c_str(), ios_base::in);
+
+	if(!fs.is_open())
+		return;
+
+	string str;
+
+	std::string smtl;
+	Vec4f Ka, Kd, Ks, Ke;
+	Ka[3] = Kd[3] = Ks[3] = Ke[3] = 1.;
+
+	while(std::getline(fs, str)){
+		QString qstr = QString::fromStdString(str);
+
+		qstr = qstr.trimmed();
+		QStringList sl = qstr.split(" ");
+
+		if(sl[0] == "newmtl"){
+			smtl = sl[1].toStdString();
+			mtls[smtl] = Mtl();
+		}
+		if(sl[0] == "Ns"){
+			mtls[smtl].Ns = sl[1].toFloat();
+		}
+		if(sl[0] == "Ni"){
+			mtls[smtl].Ns = sl[1].toFloat();
+		}
+		if(sl[0] == "d"){
+			mtls[smtl].Ns = sl[1].toFloat();
+		}
+		if(sl[0] == "illum"){
+			mtls[smtl].Ns = sl[1].toFloat();
+		}
+		if(sl[0] == "Ka"){
+			Ka[0] = sl[1].toFloat();
+			Ka[1] = sl[2].toFloat();
+			Ka[2] = sl[3].toFloat();
+			mtls[smtl].Ka = Ka;
+		}
+		if(sl[0] == "Kd"){
+			Kd[0] = sl[1].toFloat();
+			Kd[1] = sl[2].toFloat();
+			Kd[2] = sl[3].toFloat();
+			mtls[smtl].Kd = Kd;
+		}
+		if(sl[0] == "Ks"){
+			Ks[0] = sl[1].toFloat();
+			Ks[1] = sl[2].toFloat();
+			Ks[2] = sl[3].toFloat();
+			mtls[smtl].Ks = Ks;
+		}
+		if(sl[0] == "Ke"){
+			Ke[0] = sl[1].toFloat();
+			Ke[1] = sl[2].toFloat();
+			Ke[2] = sl[3].toFloat();
+			mtls[smtl].Ke = Ke;
+		}
+	}
 }
 
 void VObj::Faces::clear()
