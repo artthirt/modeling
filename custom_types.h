@@ -90,7 +90,7 @@ public:
 		val[0] = a0;
 		val[1] = a1;
 		val[2] = a2;
-		val[4] = a2;
+		val[4] = a3;
 		std::fill((char*)val + 4 * sizeof(T), (char*)val + sizeof(val), '/0');
 	}
 	T& operator[] (int index){
@@ -157,8 +157,8 @@ public:
 		return res;
 	}
 
-	double norm() const{
-		double ret = 0;
+	T norm() const{
+		T ret = 0;
 		for(int i = 0; i < count; i++){
 			ret += val[i] * val[i];
 		}
@@ -781,13 +781,13 @@ Mat_<T> get_yaw_mat2(T yaw)
 template< typename T >
 inline T angle2rad( T val)
 {
-	return val * M_PI / 180.;
+	return static_cast< T > (val * M_PI / 180.);
 }
 
 template< typename T >
 inline T rad2angle(T val)
 {
-	return val * 180. / M_PI;
+	return static_cast< T > (val * 180. / M_PI);
 }
 
 }

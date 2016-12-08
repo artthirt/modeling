@@ -3,7 +3,7 @@
 #include <QPainter>
 #include <math.h>
 
-const float r_cyrc = 10.;
+const float r_cyrc = 10.f;
 
 double norm(const QPointF& pt)
 {
@@ -14,7 +14,7 @@ double norm(const QPointF& pt)
 JoystickEmulate::JoystickEmulate(QWidget *parent)
 	: QWidget(parent)
 	, m_R(100)
-	, m_alpha(0.1)
+	, m_alpha(0.1f)
 	, m_update(false)
 	, m_mouse_pressed(false)
 {

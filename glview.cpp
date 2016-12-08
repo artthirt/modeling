@@ -231,7 +231,7 @@ void GLView::draw_model()
 	ct::Matf eiler = m_model.eiler();
 	glTranslatef(pos[0], pos[1], pos[2]);
 
-	draw_line(m_model.direction_force(), ct::Vec3f(1, 0.3, 0.3), 1);
+	draw_line(m_model.direction_force(), ct::Vec3f(1, 0.3f, 0.3f), 1);
 
 	glMultMatrixf(eiler.ptr());
 
@@ -241,14 +241,14 @@ void GLView::draw_model()
 
 	glRotatef(90, 1, 0, 0);
 
-	glScalef(0.3, 0.3, 0.3);
+	glScalef(0.3f, 0.3f, 0.3f);
 
-	glColor3f(0.5, 0.5, 0.5);
+	glColor3f(0.5f, 0.5f, 0.5f);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	const float diffuse_material[] = {0.3, 0.3, 0.3, 1};
+	const float diffuse_material[] = {0.3f, 0.3f, 0.3f, 1.f};
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_material);
 
 	for(auto it = m_model.vobjs().begin(); it != m_model.vobjs().end(); it++){
@@ -264,7 +264,7 @@ void GLView::draw_model()
 
 		for(auto itf = obj.faces.begin(); itf != obj.faces.end(); itf++){
 
-			const VObj::Faces& faces = *itf;
+			const VObj::Faces& faces = (*itf).second;
 
 			auto mtlIt = mtls.find((std::string)faces.usemtl);
 			if(mtlIt != mtls.end()){
@@ -283,15 +283,25 @@ void GLView::draw_model()
 				const std::vector< int > &fvi = fv[i];
 				const std::vector< int > &fni = fn[i];
 
-				glBegin(GL_POLYGON);
-				for(size_t j = 0; j < fvi.size(); ++j){
-					const ct::Vec3f& v = _v[fvi[j] - 1];
-					const ct::Vec3f& vn = _vn[fni[j] - 1];
+				for(size_t j = 0; j < fvi.size() - 1; j++){
+					glBegin(GL_TRIANGLES);
 
-					glNormal3fv(vn.val);
-					glVertex3fv(v.val);
+					int iv[] = {fvi[0] - 1,
+						fvi[j] - 1,
+						fvi[j + 1] - 1};
+
+					int in[] = {fni[0] - 1,
+						fni[j] - 1,
+						fni[j + 1] - 1};
+					for(size_t l = 0; l < 3; ++l){
+						const ct::Vec3f& v = _v[iv[l]];
+						const ct::Vec3f& vn = _vn[in[l]];
+						glNormal3fv(vn.val);
+						glVertex3fv(v.val);
+					}
+
+					glEnd();
 				}
-				glEnd();
 			}
 		}
 	}
@@ -401,9 +411,9 @@ void GLView::glDraw()
 	glLoadIdentity();
 
 	const float poslight[] = {100, 100, 100, 1};
-	const float alight[] = {0.01, 0.01, 0.01, 1};
-	const float slight[] = {0.3, 0.3, 0.3, 1};
-	const float dlight[] = {0.7, 0.7, 0.7, 1};
+	const float alight[] = {0.01f, 0.01f, 0.01f, 1};
+	const float slight[] = {0.3f, 0.3f, 0.3f, 1};
+	const float dlight[] = {0.7f, 0.7f, 0.7f, 1};
 
 	glTranslatef(0, 0, -5);
 
@@ -420,7 +430,7 @@ void GLView::glDraw()
 //		ct::Vec3f ps = m_model.pos();
 		ct::Vec3f dm = m_model.direct_model();
 
-		float kp = 0.1;
+		float kp = 0.1f;
 
 		dm[2] = 0;
 		dm /= dm.norm();
@@ -448,7 +458,7 @@ void GLView::glDraw()
 	draw_model();
 
 	glEnable(GL_BLEND);
-	draw_cylinder(virtual_xy_edge, 0.3, 16, ct::Vec4f(0.8, 0.4, 0.1, 0.5));
+	draw_cylinder(virtual_xy_edge, 0.3f, 16, ct::Vec4f(0.8f, 0.4f, 0.1f, 0.5f));
 	glDisable(GL_BLEND);
 
 	swapBuffers();

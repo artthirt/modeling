@@ -3,8 +3,8 @@
 
 #include "simple_xml.hpp"
 
-const float maximum_force = 150.;
-const float d_force = maximum_force/1000.;
+const float maximum_force = 150.f;
+const float d_force = maximum_force/1000.f;
 
 const QString config_main("config.main.xml");
 

@@ -39,7 +39,7 @@ public:
 	class Faces{
 	public:
 		std::string usemtl;
-		std::string name;
+//		std::string name;
 		std::vector< std::vector< int > > fv;
 		std::vector< std::vector< int > > fn;
 		std::vector< std::vector< int > > ft;
@@ -47,7 +47,7 @@ public:
 		void clear();
 	};
 
-	std::vector< Faces > faces;
+	std::map< std::string, Faces > faces;
 
 	void clear();
 	void openmtl(const std::string dir = "");

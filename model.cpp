@@ -9,7 +9,7 @@ using namespace std;
 const float gravity = 9.8f;
 const int maximum_logs = 1000;
 
-const float attenuation = 0.85;
+const float attenuation = 0.85f;
 
 Model::Model()
 	: m_useSimpleHeightControl(0)
@@ -33,7 +33,7 @@ Model::Model()
 	m_force_2 = 0;
 	m_force_3 = 0;
 	m_force_4 = 0;
-	m_arm = 0.2;
+	m_arm = 0.2f;
 }
 
 void Model::calulcate()
@@ -105,7 +105,7 @@ float Model::dt() const
 
 bool Model::is_log_exists() const
 {
-	return m_logs.size();
+	return m_logs.size() > 0;
 }
 
 string Model::pop_log()
@@ -133,7 +133,7 @@ void Model::push_log(const string &str)
 void Model::setSimpleHeightControl(bool val)
 {
 	m_useSimpleHeightControl = val;
-	m_force = 0.0001;
+	m_force = 0.0001f;
 }
 
 void Model::setHeightGoal(float h)
@@ -208,7 +208,7 @@ void Model::setForce(int index, float v)
 void Model::setUseMultipleForces(bool f)
 {
 	m_useMultipleForces = f;
-	m_force = 0.0001;
+	m_force = 0.0001f;
 }
 
 float Model::force(int index)
@@ -221,6 +221,7 @@ float Model::force(int index)
 		return m_force_3;
 	if(index == 4)
 		return m_force_4;
+	return 0;
 }
 
 void Model::reset_angles()
@@ -353,10 +354,10 @@ void Model::state_model_angles()
 		if(a_12 < 0) w_12 = -w_12;
 		float w_34 = sqrt(std::abs(a_34) / m_arm) * m_dt;
 		if(a_34 < 0) w_34 = -w_34;
-		float w_tan_12	= w_12 * sin(M_PI / 4);
-		float w_roll_12 = w_12 * cos(M_PI / 4);
-		float w_tan_34	= w_34 * sin(M_PI / 4);
-		float w_roll_34 = w_34 * cos(M_PI / 4);
+		float w_tan_12	= w_12 * sinf(M_PI / 4.f);
+		float w_roll_12 = w_12 * cosf(M_PI / 4.f);
+		float w_tan_34	= w_34 * sinf(M_PI / 4.f);
+		float w_roll_34 = w_34 * cosf(M_PI / 4.f);
 
 		m_angles[0] += w_tan_12 + w_tan_34;
 		m_angles[1] += w_roll_34 - w_roll_12;
@@ -445,9 +446,9 @@ void Model::simpleHeightControl(const Vec3f &normal)
 //	Vec3f vec_force = normal * m_force;
 //	float force = vec_force[2];
 
-	const float kp = 1.1;
-	const float kd = 20.0;
-	const float ki = 0.005;
+	const float kp = 1.1f;
+	const float kd = 20.0f;
+	const float ki = 0.005f;
 
 	e_I += e;
 

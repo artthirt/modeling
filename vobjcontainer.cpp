@@ -2,13 +2,85 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+#include <functional>
+#include <locale>
 
-#include <QString>
-#include <QStringList>
-#include <QDebug>
+//#include <QString>
+//#include <QStringList>
+//#include <QDebug>
 
 using namespace std;
 using namespace ct;
+
+///////////////////////////////////////
+
+typedef std::vector< std::string > stringlist;
+
+struct __isspace: std::unary_function< bool, char >
+{
+	bool operator() (char val) const{
+		return std::isspace(val, std::locale());
+	}
+};
+
+template<class _Elem> inline
+	bool (isspace1)(_Elem _Ch)
+	{	// test if character is whitespace, locale specific
+	return (_USE(std::locale(), ctype<_Elem>).is(ctype_base::space, _Ch));
+	}
+
+// trim from start (in place)
+static inline void ltrim(string& s)
+{
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+			std::not1(std::ptr_fun<int, bool>(isspace1))));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+	s.erase(std::find_if(s.rbegin(), s.rend(),
+			std::not1(std::ptr_fun<int, bool>(isspace1))).base(), s.end());
+}
+
+static inline string trim(const string val)
+{
+	string res = val;
+	ltrim(res);
+	rtrim(res);
+	//res = rtrim(val);
+	return res;
+}
+
+static inline stringlist split(const std::string& val, char delim)
+{
+	std::istringstream is(val);
+	stringlist res;
+	std::string str;
+
+	while(std::getline(is, str, delim)){
+		res.push_back(str);
+	}
+	return res;
+}
+
+inline float toFloat(const std::string& val)
+{
+	double res;
+	stringstream ss = stringstream(val);
+	ss >> res;
+	return static_cast<float>(res);
+}
+
+inline int toInt(const std::string& val)
+{
+	int res;
+	stringstream ss = stringstream(val);
+	ss >> res;
+	return res;
+}
+
+///////////////////////////////////////
 
 VObjContainer::VObjContainer()
 {
@@ -24,6 +96,9 @@ bool VObjContainer::open(const std::string &fn)
 		return false;
 
 	std::string dir;
+
+//	string s = "    s12345   ";
+//	s = trim(s);
 
 //	{
 //		QString t = QString(fn.c_str());
@@ -48,53 +123,63 @@ bool VObjContainer::open(const std::string &fn)
 	}
 
 	string str;
+	string obj_name;
 
 	VObj obj;
-	VObj::Faces faces;
+//	VObj::Faces faces;
 
-	bool created = false;
+//	bool created = false;
 
 	while(std::getline(fs, str)){
-		QString qstr = QString::fromStdString(str);
+		//QString qstr = QString::fromStdString(str);
+		string qstr = trim(str);
 
-		qstr = qstr.trimmed();
-		QStringList sl = qstr.split(" ");
+		//qstr = qstr.trimmed();
+		//QStringList sl = qstr.split(" ");
+		stringlist sl = split(qstr, ' ');
 		if(sl.size()){
 
-
 			if(sl[0] == "mtllib"){
-				obj.mtlfile = sl[1].toStdString();
+				obj.mtlfile = sl[1];
 				continue;
 			}
 			if(sl[0] == "o"){
 
-				if(created){
-					//m_vobjs.push_back(obj);
-					obj.faces.push_back(faces);
-					faces.clear();
-				}
+//				if(created){
+//					//m_vobjs.push_back(obj);
+//					obj.faces.push_back(faces);
+//					faces.clear();
+//				}
 
 				//obj.clear();
-				qDebug() << "name: " << sl[1] << "; vertex offset: " << obj.v.size();
+				cout << "name: " << sl[1].c_str() << "; vertex offset: " << obj.v.size();
 
-				faces.name = sl[1].toStdString();
-				created = true;
+				obj_name = sl[1];
+
+				obj.faces[obj_name] = VObj::Faces();
+//				created = true;
 				continue;
 			}
 			if(sl[0] == "usemtl"){
-				faces.usemtl = sl[1].toStdString();
+				obj.faces[obj_name].usemtl = sl[1];
 				continue;
 			}
 			if(sl[0] == "v"){
-				obj.v.push_back(Vec3f(sl[1].toFloat(),
-								sl[2].toFloat(),
-								sl[3].toFloat()));
+				obj.v.push_back(Vec3f(toFloat(sl[1]),
+								toFloat(sl[2]),
+								toFloat(sl[3])));
 				continue;
 			}
 			if(sl[0] == "vn"){
-				obj.vn.push_back(Vec3f(sl[1].toFloat(),
-								sl[2].toFloat(),
-								sl[3].toFloat()));
+				obj.vn.push_back(Vec3f(toFloat(sl[1]),
+								toFloat(sl[2]),
+								toFloat(sl[3])));
+				continue;
+			}
+			if(sl[0] == "vt"){
+				obj.vn.push_back(Vec3f(toFloat(sl[1]),
+								toFloat(sl[2]),
+								sl.size() > 3? toFloat(sl[3]) : 1.f));
 				continue;
 			}
 			if(sl[0] == "f"){
@@ -103,31 +188,33 @@ bool VObjContainer::open(const std::string &fn)
 				std::vector< int > fni;
 
 				for(int i = 1; i < sl.size(); ++i){
-					QStringList face = sl[i].split('/');
+					stringlist face = split(sl[i], '/');
 					if(face.size()){
-						fvi.push_back(face[0].toInt());
-						if(!face[1].isEmpty()){
-							fti.push_back(face[1].toInt());
+						fvi.push_back(toInt(face[0]));
+						if(!face[1].empty()){
+							fti.push_back(toInt(face[1]));
 						}
-						if(!face[2].isEmpty()){
-							fni.push_back(face[2].toInt());
+						if(!face[2].empty()){
+							fni.push_back(toInt(face[2]));
 						}
 					}
 				}
-				faces.fv.push_back(fvi);
-				faces.ft.push_back(fti);
-				faces.fn.push_back(fni);
+				obj.faces[obj_name].fv.push_back(fvi);
+				obj.faces[obj_name].ft.push_back(fti);
+				obj.faces[obj_name].fn.push_back(fni);
 				continue;
 			}
 		}
 	}
 
+	m_vobjs.push_back(obj);
+
 	fs.close();
 
-	if(created && !obj.v.empty()){
-		obj.faces.push_back(faces);
-		m_vobjs.push_back(obj);
-	}
+//	if(created && !obj.v.empty()){
+//		obj.faces.push_back(faces);
+//		m_vobjs.push_back(obj);
+//	}
 
 	for(auto it = m_vobjs.begin(); it != m_vobjs.end(); it++){
 		VObj& obj = *it;
@@ -136,7 +223,9 @@ bool VObjContainer::open(const std::string &fn)
 
 		size_t cnt = obj.v.size();
 		for(auto it = obj.faces.begin(); it != obj.faces.end(); it++){
-			VObj::Faces & faces = *it;
+			VObj::Faces & faces = (*it).second;
+
+			cout << "face:" << (*it).first.c_str() << faces.fn.size() << faces.ft.size() << faces.fv.size();
 
 			for(size_t i = 0; i < faces.fv.size(); i++){
 
@@ -201,49 +290,51 @@ void VObj::openmtl(const string dir)
 	Ka[3] = Kd[3] = Ks[3] = Ke[3] = 1.;
 
 	while(std::getline(fs, str)){
-		QString qstr = QString::fromStdString(str);
+		string qstr = trim(str);
 
-		qstr = qstr.trimmed();
-		QStringList sl = qstr.split(" ");
+//		qstr = qstr.trimmed();
+		stringlist sl = split(qstr, ' ');
 
+		if(sl.empty())
+			continue;
 		if(sl[0] == "newmtl"){
-			smtl = sl[1].toStdString();
+			smtl = sl[1];
 			mtls[smtl] = Mtl();
 		}
 		if(sl[0] == "Ns"){
-			mtls[smtl].Ns = sl[1].toFloat();
+			mtls[smtl].Ns = toFloat(sl[1]);
 		}
 		if(sl[0] == "Ni"){
-			mtls[smtl].Ns = sl[1].toFloat();
+			mtls[smtl].Ns = toFloat(sl[1]);
 		}
 		if(sl[0] == "d"){
-			mtls[smtl].Ns = sl[1].toFloat();
+			mtls[smtl].Ns = toFloat(sl[1]);
 		}
 		if(sl[0] == "illum"){
-			mtls[smtl].Ns = sl[1].toFloat();
+			mtls[smtl].Ns = toFloat(sl[1]);
 		}
 		if(sl[0] == "Ka"){
-			Ka[0] = sl[1].toFloat();
-			Ka[1] = sl[2].toFloat();
-			Ka[2] = sl[3].toFloat();
+			Ka[0] = toFloat(sl[1]);
+			Ka[1] = toFloat(sl[2]);
+			Ka[2] = toFloat(sl[3]);
 			mtls[smtl].Ka = Ka;
 		}
 		if(sl[0] == "Kd"){
-			Kd[0] = sl[1].toFloat();
-			Kd[1] = sl[2].toFloat();
-			Kd[2] = sl[3].toFloat();
+			Kd[0] = toFloat(sl[1]);
+			Kd[1] = toFloat(sl[2]);
+			Kd[2] = toFloat(sl[3]);
 			mtls[smtl].Kd = Kd;
 		}
 		if(sl[0] == "Ks"){
-			Ks[0] = sl[1].toFloat();
-			Ks[1] = sl[2].toFloat();
-			Ks[2] = sl[3].toFloat();
+			Ks[0] = toFloat(sl[1]);
+			Ks[1] = toFloat(sl[2]);
+			Ks[2] = toFloat(sl[3]);
 			mtls[smtl].Ks = Ks;
 		}
 		if(sl[0] == "Ke"){
-			Ke[0] = sl[1].toFloat();
-			Ke[1] = sl[2].toFloat();
-			Ke[2] = sl[3].toFloat();
+			Ke[0] = toFloat(sl[1]);
+			Ke[1] = toFloat(sl[2]);
+			Ke[2] = toFloat(sl[3]);
 			mtls[smtl].Ke = Ke;
 		}
 	}
@@ -251,7 +342,6 @@ void VObj::openmtl(const string dir)
 
 void VObj::Faces::clear()
 {
-	name = "";
 	fv.clear();
 	fn.clear();
 	ft.clear();
