@@ -410,10 +410,10 @@ void GLView::glDraw()
 	glClearColor(m_color_space[0], m_color_space[1], m_color_space[2], 1);
 	glLoadIdentity();
 
-	const float poslight[] = {100, 100, 100, 1};
-	const float alight[] = {0.01f, 0.01f, 0.01f, 1};
-	const float slight[] = {0.3f, 0.3f, 0.3f, 1};
-	const float dlight[] = {0.7f, 0.7f, 0.7f, 1};
+	const float poslight[] = {10, -100, 100, 1};
+	const float alight[] = {0.0f, 0.0f, 0.0f, 1};
+	const float slight[] = {0.3f, 0.3f, 0.3f, 0.1};
+	const float dlight[] = {0.5f, 0.5f, 0.5f, 1};
 
 	glTranslatef(0, 0, -5);
 
