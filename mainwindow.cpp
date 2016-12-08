@@ -252,3 +252,13 @@ void MainWindow::onChangeValue(float x, float y)
 	//ui->hs_tangage_goal->setValue(y * ui->hs_tangage_goal->maximum());
 	//ui->hs_roll_goal->setValue(x * ui->hs_roll_goal->maximum());
 }
+
+void MainWindow::on_chb_route_clicked(bool checked)
+{
+	ui->widgetView->setShowRoute(checked);
+}
+
+void MainWindow::on_pb_generate_route_clicked()
+{
+	ui->widgetView->generate_route(ui->sb_number_point->value());
+}

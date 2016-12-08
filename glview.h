@@ -7,6 +7,7 @@
 #include <QTimer>
 
 #include <model.h>
+#include "modelroute.h"
 
 namespace Ui {
 class GLView;
@@ -21,6 +22,7 @@ public:
 	~GLView();
 
 	Model &model();
+	ModelRoute &modelRoute();
 
 	void set_yaw(float v);
 	void set_tangage(float v);
@@ -39,6 +41,10 @@ public:
 
 	void set_update();
 
+	void generate_route(size_t count);
+
+	void setShowRoute(bool v);
+
 private:
 	Ui::GLView *ui;
 	bool m_init;
@@ -46,6 +52,8 @@ private:
 
 	bool m_tracking;
 	float m_tracking_angle;
+
+	bool m_show_route;
 
 	QTimer m_timer;
 	QTimer m_timer_model;
@@ -65,9 +73,12 @@ private:
 
 	ct::Vec3f m_color_space;
 
+	ModelRoute m_modelRoute;
+
 	void init();
 	void draw_net();
 	void draw_model();
+	void draw_route();
 
 	void load_xml();
 	void save_xml();

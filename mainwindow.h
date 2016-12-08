@@ -71,6 +71,10 @@ private slots:
 
 	void onChangeValue(float x, float y);
 
+	void on_chb_route_clicked(bool checked);
+
+	void on_pb_generate_route_clicked();
+
 private:
 	Ui::MainWindow *ui;
 

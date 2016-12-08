@@ -74,6 +74,7 @@ GLView::GLView(QWidget *parent) :
   , m_color_space(ct::Vec3f::ones())
   , m_tracking(false)
   , m_tracking_angle(0)
+  , m_show_route(false)
 {
 	ui->setupUi(this);
 
@@ -104,6 +105,11 @@ GLView::~GLView()
 Model &GLView::model()
 {
 	return m_model;
+}
+
+ModelRoute &GLView::modelRoute()
+{
+	return m_modelRoute;
 }
 
 void GLView::set_yaw(float v)
@@ -168,6 +174,20 @@ void GLView::set_tracking(bool v)
 void GLView::set_update()
 {
 	m_update = true;
+}
+
+void GLView::generate_route(size_t count)
+{
+	m_modelRoute.generate_route_uniform(count,
+										ct::Vec3f(-virtual_xy_edge, -virtual_xy_edge, virtual_z_edge/100.f),
+										ct::Vec3f(virtual_xy_edge, virtual_xy_edge, virtual_z_edge/2));
+	set_update();
+}
+
+void GLView::setShowRoute(bool v)
+{
+	m_show_route = v;
+	set_update();
 }
 
 void GLView::init()
@@ -310,6 +330,45 @@ void GLView::draw_model()
 	glPopMatrix();
 }
 
+void GLView::draw_route()
+{
+	if(!m_modelRoute.count())
+		return;
+
+	glLineWidth(3);
+
+
+	const std::vector< ct::Vec3f > &pts = m_modelRoute.points();
+
+	glColor3f(0.8, 0.5, 0.7);
+
+	glBegin(GL_LINE_STRIP);
+	for(size_t i = 0; i < pts.size(); i++){
+		glVertex3fv(pts[i].val);
+	}
+	glEnd();
+
+	glPointSize(10);
+
+	glEnable(GL_POINT_SMOOTH);
+	glBegin(GL_POINTS);
+	for(size_t i = 1; i < pts.size() - 1; i++){
+		glVertex3fv(pts[i].val);
+	}
+	glEnd();
+
+	glBegin(GL_POINTS);
+	glColor3f(0.1, 0.7, 0.1);
+	glVertex3fv(pts[0].val);
+	glColor3f(0.7, 0.1, 0.1);
+	glVertex3fv(pts[pts.size() - 1].val);
+	glEnd();
+
+	glDisable(GL_POINT_SMOOTH);
+
+	glLineWidth(1);
+}
+
 void GLView::load_xml()
 {
 	QMap< QString, QVariant > params;
@@ -387,7 +446,7 @@ void GLView::resizeGL(int w, int h)
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45., (double)w/h, 1, 100);
+	gluPerspective(45., (double)w/h, 1, 500);
 	glMatrixMode(GL_MODELVIEW);
 
 	update();
@@ -420,7 +479,7 @@ void GLView::glDraw()
 	if(!m_tracking){
 		glTranslatef(0, 0, -(m_current_z + m_delta_z));
 
-		glRotatef(m_delta_pt.x(), 0, 1, 0);
+		glRotatef(-m_delta_pt.x(), 0, 1, 0);
 		glRotatef(m_delta_pt.y(), 1, 0, 0);
 	}else{
 	}
@@ -456,6 +515,10 @@ void GLView::glDraw()
 	draw_net();
 
 	draw_model();
+
+	if(m_show_route){
+		draw_route();
+	}
 
 	glEnable(GL_BLEND);
 	draw_cylinder(virtual_xy_edge, 0.3f, 16, ct::Vec4f(0.8f, 0.4f, 0.1f, 0.5f));

@@ -30,7 +30,8 @@ SOURCES += main.cpp\
     vobjcontainer.cpp \
     simple_xml.cpp \
     customslider.cpp \
-    joystickemulate.cpp
+    joystickemulate.cpp \
+    modelroute.cpp
 
 HEADERS  += mainwindow.h \
     glview.h \
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     vobjcontainer.h \
     simple_xml.hpp \
     customslider.h \
-    joystickemulate.h
+    joystickemulate.h \
+    modelroute.h
 
 FORMS    += mainwindow.ui \
     glview.ui

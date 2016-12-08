@@ -11,6 +11,9 @@ const int maximum_logs = 1000;
 
 const float attenuation = 0.85f;
 
+/// coefficient friction of oac-tree (for example)
+const float coeff_friction = 0.62f;
+
 Model::Model()
 	: m_useSimpleHeightControl(0)
 	, m_heightGoal(8)
@@ -439,10 +442,22 @@ void Model::state_model_position(Vec3f &force_direction)
 
 	push_log("after force: " + m_vel.operator std::string());
 
+	if(m_pos[2] + m_vel[2] <= 0){
+		Vec3f v = m_vel;
+		m_vel[2] = 0;
+		float v_ground = v.norm();
+		/// if the model on ground
+		if(v_ground / m_dt < coeff_friction * gravity){
+			m_vel[0] = 0;
+			m_vel[1] = 0;
+			m_angles[0] = 0;
+			m_angles[1] = 0;
+		}
+	}
+
 	m_pos += m_vel;
 
 	m_angles += m_angles_vel;
-
 
 	if(m_pos[2] < 0){
 		m_pos[2] = 0;

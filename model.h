@@ -139,6 +139,6 @@ private:
 };
 
 const float virtual_z_edge = 50.;
-const float virtual_xy_edge = 15.;
+const float virtual_xy_edge = 50.;
 
 #endif // MODEL_H
