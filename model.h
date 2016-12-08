@@ -74,6 +74,10 @@ public:
 	void setRoll(float v);
 	void setTangage(float v);
 
+	float roll() const;
+	float tangage() const;
+	float yaw() const;
+
 	ct::Vec3f direction_force() const;
 	ct::Vec3f direct_model() const;
 
@@ -128,6 +132,7 @@ private:
 
 	ct::Vec3f m_direction_force;
 	ct::Vec3f m_direct_model;
+	ct::Vec3f m_roll_model;
 
 private:
 	VObjContainer m_container;

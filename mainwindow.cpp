@@ -88,6 +88,8 @@ void MainWindow::load_xml()
 	ui->dsb_f4->setValue(params["f4"].toFloat());
 	ui->dsb_height->setValue(params["height"].toFloat());
 	ui->chb_tracking->setChecked(params["tracking"].toBool());
+
+	ui->widgetView->set_tracking(ui->chb_tracking->isChecked());
 }
 
 void MainWindow::save_xml()
@@ -146,8 +148,9 @@ void MainWindow::onTimeout()
 	if(m_force < 0)
 		m_force = 0;
 
-	ui->lb_roll->setText(QString::number(1. * ui->hs_roll_goal->value() / ui->hs_roll_goal->maximum() * 180., 'f', 2));
-	ui->lb_tangage->setText(QString::number(1. * ui->hs_tangage_goal->value() / ui->hs_tangage_goal->maximum() * 180., 'f', 2));
+	ui->lb_yaw->setText(QString::number(ui->widgetView->model().yaw(), 'f', 2));
+	ui->lb_roll->setText(QString::number(ui->widgetView->model().roll(), 'f', 2));
+	ui->lb_tangage->setText(QString::number(ui->widgetView->model().tangage(), 'f', 2));
 
 	ui->lb_f1->setText(QString::number(ui->widgetView->model().force(1), 'f', 3));
 	ui->lb_f2->setText(QString::number(ui->widgetView->model().force(2), 'f', 3));

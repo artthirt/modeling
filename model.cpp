@@ -16,6 +16,7 @@ Model::Model()
 	, m_heightGoal(8)
 	, m_useMultipleForces(false)
 	, m_direct_model(1, 0, 0)
+	, m_roll_model(0, 1, 0)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -250,6 +251,31 @@ void Model::setTangage(float v)
 	m_angles[0] = angle2rad(v);
 }
 
+float Model::roll() const
+{
+	Vec3f v = m_roll_model;
+	v[2] = 0;
+	float x = v.norm();
+	float y = m_roll_model[2];
+	return rad2angle(atan2(y, x));
+}
+
+float Model::tangage() const
+{
+	Vec3f v = m_direct_model;
+	v[2] = 0;
+	float x = v.norm();
+	float y = m_direct_model[2];
+	return rad2angle(atan2(y, x));
+}
+
+float Model::yaw() const
+{
+	Vec3f v = m_direct_model;
+	v[2] = 0;
+	return rad2angle(atan2(v[1], v[0]));
+}
+
 Vec3f Model::direction_force() const
 {
 	return m_direction_force;
@@ -379,6 +405,7 @@ void Model::state_model_position(Vec3f &force_direction)
 {
 	Vec3f vel(0, 0, 1);
 	Vec3f direct_model(1, 0, 0);
+	Vec3f roll_model(0, 1, 0);
 
 	Matf m = get_eiler_mat(m_angles);
 	m = m.t();
@@ -394,9 +421,13 @@ void Model::state_model_position(Vec3f &force_direction)
 
 	force_direction = vel;
 
+	/// get direct model
 	mv = m * direct_model;
-
 	m_direct_model = mv.toVec<3>();
+
+	/// get roll model
+	mv = m * roll_model;
+	m_roll_model = mv.toVec<3>();
 	//push_log("from mat: " + vel.operator std::string());
 	vel *= (m_force/m_mass * m_dt);
 
