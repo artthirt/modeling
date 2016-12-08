@@ -140,7 +140,7 @@
        <property name="topMargin">
         <number>0</number>
        </property>
-       <item row="0" column="9">
+       <item row="2" column="6">
         <widget class="QDoubleSpinBox" name="dsb_f4">
          <property name="toolTip">
           <string>F4</string>
@@ -150,16 +150,6 @@
          </property>
          <property name="singleStep">
           <double>0.100000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="7">
-        <widget class="QDoubleSpinBox" name="dsb_f2">
-         <property name="toolTip">
-          <string>F2</string>
-         </property>
-         <property name="decimals">
-          <number>4</number>
          </property>
         </widget>
        </item>
@@ -173,10 +163,24 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="10">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="chb_tracking">
+         <property name="text">
+          <string>Tracking</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="11">
         <widget class="QPushButton" name="pb_rese_angles">
          <property name="text">
           <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Forces</string>
          </property>
         </widget>
        </item>
@@ -193,27 +197,10 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Forces</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="11">
+       <item row="0" column="12">
         <widget class="QLabel" name="label_6">
          <property name="text">
           <string>Common</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="12">
-        <widget class="QDoubleSpinBox" name="dsb_common_force">
-         <property name="decimals">
-          <number>4</number>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
          </property>
         </widget>
        </item>
@@ -241,48 +228,73 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="4">
+       <item row="0" column="13">
+        <widget class="QDoubleSpinBox" name="dsb_common_force">
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="8">
+        <widget class="QDoubleSpinBox" name="dsb_f2">
+         <property name="toolTip">
+          <string>F2</string>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QLabel" name="lb_f1">
+         <property name="toolTip">
+          <string>F1</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QLabel" name="lb_f3">
+         <property name="toolTip">
+          <string>F3</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="7">
+        <widget class="QLabel" name="lb_f4">
+         <property name="toolTip">
+          <string>F4</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="9">
+        <widget class="QLabel" name="lb_f2">
+         <property name="toolTip">
+          <string>F2</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
         <widget class="QPushButton" name="pb_use_forces">
          <property name="text">
           <string>Use Forces</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="6">
-        <widget class="QLabel" name="lb_f1">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="7">
-        <widget class="QLabel" name="lb_f2">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="8">
-        <widget class="QLabel" name="lb_f3">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="9">
-        <widget class="QLabel" name="lb_f4">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QCheckBox" name="chb_tracking">
-         <property name="text">
-          <string>Tracking</string>
          </property>
         </widget>
        </item>
@@ -445,6 +457,25 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="maximumSize">
+        <size>
+         <width>90</width>
+         <height>70</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="modeling.qrc">:/resource/view.png</pixmap>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>
@@ -484,7 +515,9 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="modeling.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>actionExit</sender>

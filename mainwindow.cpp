@@ -87,6 +87,7 @@ void MainWindow::load_xml()
 	ui->dsb_f3->setValue(params["f3"].toFloat());
 	ui->dsb_f4->setValue(params["f4"].toFloat());
 	ui->dsb_height->setValue(params["height"].toFloat());
+	ui->chb_tracking->setChecked(params["tracking"].toBool());
 }
 
 void MainWindow::save_xml()
@@ -101,6 +102,7 @@ void MainWindow::save_xml()
 	params["f3"] = ui->dsb_f3->value();
 	params["f4"] = ui->dsb_f4->value();
 	params["height"] = ui->dsb_height->value();
+	params["tracking"] = ui->chb_tracking->isChecked();
 
 	SimpleXML::save_param(config_main, params);
 }

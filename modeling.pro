@@ -49,3 +49,6 @@ win32{
 }else{
     LIBS += -lGL -lGLU
 }
+
+RESOURCES += \
+    modeling.qrc
