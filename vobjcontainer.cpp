@@ -23,7 +23,7 @@ struct __isspace: std::unary_function< bool, char >
 		return std::isspace(val, std::locale());
 	}
 };
-
+#ifdef _MSC_VER
 template<class _Elem> inline
 	bool (isspace1)(_Elem _Ch)
 	{	// test if character is whitespace, locale specific
@@ -42,6 +42,21 @@ static inline void rtrim(std::string &s) {
 	s.erase(std::find_if(s.rbegin(), s.rend(),
 			std::not1(std::ptr_fun<int, bool>(isspace1))).base(), s.end());
 }
+
+#else
+// trim from start (in place)
+static inline void ltrim(string& s)
+{
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+			std::not1(std::ptr_fun<int, int>(std::isspace))));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+	s.erase(std::find_if(s.rbegin(), s.rend(),
+			std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+}
+#endif
 
 static inline string trim(const string val)
 {

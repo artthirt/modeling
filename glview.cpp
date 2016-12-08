@@ -261,7 +261,7 @@ void GLView::draw_model()
 
 	glRotatef(90, 1, 0, 0);
 
-	glScalef(0.3f, 0.3f, 0.3f);
+	glScalef(0.1f, 0.1f, 0.1f);
 
 	glColor3f(0.5f, 0.5f, 0.5f);
 
@@ -446,7 +446,7 @@ void GLView::resizeGL(int w, int h)
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45., (double)w/h, 1, 500);
+	gluPerspective(60., (double)w/h, 0.1, 500);
 	glMatrixMode(GL_MODELVIEW);
 
 	update();
@@ -479,7 +479,7 @@ void GLView::glDraw()
 	if(!m_tracking){
 		glTranslatef(0, 0, -(m_current_z + m_delta_z));
 
-		glRotatef(-m_delta_pt.x(), 0, 1, 0);
+		glRotatef(m_delta_pt.x(), 0, 1, 0);
 		glRotatef(m_delta_pt.y(), 1, 0, 0);
 	}else{
 	}
@@ -563,7 +563,7 @@ void GLView::mouseMoveEvent(QMouseEvent *event)
 	if(event->buttons().testFlag(Qt::MiddleButton)){
 		QPointF pt = event->pos() - m_wheel_pt;
 
-		m_delta_z = pt.y();
+		m_delta_z = pt.y()/5.;
 
 		set_update();
 	}
