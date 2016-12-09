@@ -470,9 +470,9 @@ void GLView::glDraw()
 	glLoadIdentity();
 
 	const float poslight[] = {10, -100, 100, 1};
-	const float alight[] = {0.0f, 0.0f, 0.0f, 1};
-	const float slight[] = {0.3f, 0.3f, 0.3f, 0.1};
-	const float dlight[] = {0.5f, 0.5f, 0.5f, 1};
+	const float alight[] = {0.0f, 0.0f, 0.0f, 0};
+	const float slight[] = {0.1f, 0.1f, 0.1f, 0};
+	const float dlight[] = {0.2f, 0.2f, 0.2f, 0};
 
 	glTranslatef(0, 0, -5);
 
@@ -510,7 +510,7 @@ void GLView::glDraw()
 	glLightfv(GL_LIGHT0, GL_AMBIENT, alight);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, slight);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, dlight);
-	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 10);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 100);
 
 	draw_net();
 
