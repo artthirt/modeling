@@ -75,6 +75,12 @@ private slots:
 
 	void on_pb_generate_route_clicked();
 
+	void on_chb_useIntegalError_clicked(bool checked);
+
+	void on_pb_power_clicked(bool checked);
+
+	void on_pb_goToGoal_clicked(bool checked);
+
 private:
 	Ui::MainWindow *ui;
 

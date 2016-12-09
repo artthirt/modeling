@@ -90,7 +90,7 @@ public:
 		val[0] = a0;
 		val[1] = a1;
 		val[2] = a2;
-		val[4] = a3;
+		val[3] = a3;
 		std::fill((char*)val + 4 * sizeof(T), (char*)val + sizeof(val), '/0');
 	}
 	T& operator[] (int index){
@@ -99,49 +99,49 @@ public:
 	const T& operator[] (int index) const{
 		return val[index];
 	}
-	Vec_<T, count>& operator+=( const Vec_<T, count>& v){
+	inline Vec_<T, count>& operator+=( const Vec_<T, count>& v){
 		for(int i = 0; i < count; i++){
 			val[i] += v[i];
 		}
 		return *this;
 	}
-	Vec_<T, count>& operator-=( const Vec_<T, count>& v){
+	inline Vec_<T, count>& operator-=( const Vec_<T, count>& v){
 		for(int i = 0; i < count; i++){
 			val[i] -= v[i];
 		}
 		return *this;
 	}
-	Vec_<T, count>& operator*=( const Vec_<T, count>& v){
+	inline Vec_<T, count>& operator*=( const Vec_<T, count>& v){
 		for(int i = 0; i < count; i++){
 			val[i] *= v[i];
 		}
 		return *this;
 	}
-	Vec_<T, count>& operator+=(T v){
+	inline Vec_<T, count>& operator+=(T v){
 		for(int i = 0; i < count; i++){
 			val[i] += v;
 		}
 		return *this;
 	}
-	Vec_<T, count>& operator-=(T v){
+	inline Vec_<T, count>& operator-=(T v){
 		for(int i = 0; i < count; i++){
 			val[i] -= v;
 		}
 		return *this;
 	}
-	Vec_<T, count>& operator*=(T v){
+	inline Vec_<T, count>& operator*=(T v){
 		for(int i = 0; i < count; i++){
 			val[i] *= v;
 		}
 		return *this;
 	}
-	Vec_<T, count>& operator/=(T v){
+	inline Vec_<T, count>& operator/=(T v){
 		for(int i = 0; i < count; i++){
 			val[i] /= v;
 		}
 		return *this;
 	}
-	bool operator== (const Vec_<T, count>& v) const{
+	inline bool operator== (const Vec_<T, count>& v) const{
 		const T eps = 1e-12;
 		double res = 0;
 		for(int i = 0; i < count; i++){
@@ -149,7 +149,14 @@ public:
 		}
 		return res < eps;
 	}
-	Vec_<T, count> conj(){
+	inline bool empty() const{
+		bool notempty = false;
+		for(int i = 0; i < count; i++){
+			notempty |= val[i] != 0;
+		}
+		return !notempty;
+	}
+	inline Vec_<T, count> conj(){
 		Vec_<T, count > res;
 		for(int i = 0; i < count; i++){
 			res.val[i] = -val[i];
@@ -157,14 +164,14 @@ public:
 		return res;
 	}
 
-	T norm() const{
+	inline T norm() const{
 		T ret = 0;
 		for(int i = 0; i < count; i++){
 			ret += val[i] * val[i];
 		}
 		return ::sqrt(ret);
 	}
-	T dot(const Vec_<T, count>& v) const{
+	inline T dot(const Vec_<T, count>& v) const{
 		T ret = 0;
 		for(int i = 0; i < count; i++){
 			ret += val[i] * v.val[i];
@@ -172,15 +179,24 @@ public:
 		return ret;
 
 	}
+	inline Vec_< T, count > cross(const Vec_< T, count > & v2){
+		Vec_< T, count > res;
+		if(count != 3)
+			return res;
+		res[0] = val[1] * v2.val[2] - val[2] * v2.val[1];
+		res[1] = val[2] * v2.val[0] - val[0] * v2.val[2];
+		res[2] = val[0] * v2.val[1] - val[1] * v2.val[0];
+		return res;
+	}
 
-	T* ptr(){
+	inline T* ptr(){
 		return val;
 	}
-	const T* ptr() const{
+	inline const T* ptr() const{
 		return val;
 	}
 
-	int channels() const{
+	inline int channels() const{
 		return count;
 	}
 
@@ -195,14 +211,14 @@ public:
 	}
 
 	///******************************
-	static Vec_< T, count > zeros(){
+	static inline Vec_< T, count > zeros(){
 		Vec_< T, count > res;
 		for(int i = 0; i < count; i++){
 			res.val[i] = 0;
 		}
 		return res;
 	}
-	static Vec_< T, count > ones(){
+	static inline Vec_< T, count > ones(){
 		Vec_< T, count > res;
 		for(int i = 0; i < count; i++){
 			res.val[i] = 1;
@@ -214,7 +230,7 @@ private:
 };
 
 template<typename T, int count>
-Vec_<T, count> operator+ (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+inline Vec_<T, count> operator+ (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 {
 	Vec_<T, count> ret;
 
@@ -225,7 +241,7 @@ Vec_<T, count> operator+ (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator/ (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+inline Vec_<T, count> operator/ (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 {
 	Vec_<T, count> ret;
 
@@ -236,7 +252,7 @@ Vec_<T, count> operator/ (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator- (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+inline Vec_<T, count> operator- (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 {
 	Vec_<T, count> ret;
 
@@ -247,7 +263,7 @@ Vec_<T, count> operator- (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator* (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+inline Vec_<T, count> operator* (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 {
 	Vec_<T, count> ret;
 
@@ -258,7 +274,7 @@ Vec_<T, count> operator* (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator+ (const Vec_<T, count>& v1, T v2)
+inline Vec_<T, count> operator+ (const Vec_<T, count>& v1, T v2)
 {
 	Vec_<T, count> ret;
 
@@ -269,7 +285,7 @@ Vec_<T, count> operator+ (const Vec_<T, count>& v1, T v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator- (const Vec_<T, count>& v1, T v2)
+inline Vec_<T, count> operator- (const Vec_<T, count>& v1, T v2)
 {
 	Vec_<T, count> ret;
 
@@ -280,7 +296,7 @@ Vec_<T, count> operator- (const Vec_<T, count>& v1, T v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator* (const Vec_<T, count>& v1, T v2)
+inline Vec_<T, count> operator* (const Vec_<T, count>& v1, T v2)
 {
 	Vec_<T, count> ret;
 
@@ -291,7 +307,7 @@ Vec_<T, count> operator* (const Vec_<T, count>& v1, T v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> operator/ (const Vec_<T, count>& v1, T v2)
+inline Vec_<T, count> operator/ (const Vec_<T, count>& v1, T v2)
 {
 	Vec_<T, count> ret;
 
@@ -302,7 +318,7 @@ Vec_<T, count> operator/ (const Vec_<T, count>& v1, T v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> max (const Vec_<T, count>& v1, T v2)
+inline Vec_<T, count> max (const Vec_<T, count>& v1, T v2)
 {
 	Vec_<T, count > res;
 	for(int i = 0; i < count; i++){
@@ -312,7 +328,7 @@ Vec_<T, count> max (const Vec_<T, count>& v1, T v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> min (const Vec_<T, count>& v1, T v2)
+inline Vec_<T, count> min (const Vec_<T, count>& v1, T v2)
 {
 	Vec_<T, count > res;
 	for(int i = 0; i < count; i++){
@@ -322,7 +338,7 @@ Vec_<T, count> min (const Vec_<T, count>& v1, T v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> min (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+inline Vec_<T, count> min (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 {
 	Vec_<T, count > res;
 	for(int i = 0; i < count; i++){
@@ -332,7 +348,7 @@ Vec_<T, count> min (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> max (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
+inline Vec_<T, count> max (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 {
 	Vec_<T, count > res;
 	for(int i = 0; i < count; i++){
@@ -342,7 +358,7 @@ Vec_<T, count> max (const Vec_<T, count>& v1, const Vec_<T, count>& v2)
 }
 
 template<typename T, int count>
-Vec_<T, count> sign(const Vec_<T, count>& v1)
+inline Vec_<T, count> sign(const Vec_<T, count>& v1)
 {
 	Vec_<T, count > res;
 	for(int i = 0; i < count; i++){
@@ -352,7 +368,7 @@ Vec_<T, count> sign(const Vec_<T, count>& v1)
 }
 
 template<typename T, int count>
-Vec_<T, count> sqrt(const Vec_<T, count>& v1)
+inline Vec_<T, count> sqrt(const Vec_<T, count>& v1)
 {
 	Vec_<T, count > res;
 	for(int i = 0; i < count; i++){
@@ -454,17 +470,17 @@ public:
 		return rows * cols;
 	}
 	///********************
-	T* ptr(){
+	inline T* ptr(){
 		return &val[0];
 	}
-	T* ptr() const{
+	inline T* ptr() const{
 		return &val[0];
 	}
 	///****************
-	char* bytes(){
+	inline char* bytes(){
 		return (char*)val[0];
 	}
-	char* bytes() const{
+	inline char* bytes() const{
 		return (char*)val[0];
 	}
 	///*********************
@@ -481,17 +497,17 @@ public:
 		return val[i0 * cols];
 	}
 	///********************
-	Mat_<T> operator *= (T v){
+	inline Mat_<T> operator *= (T v){
 		for(int i = 0; i < rows * cols; i++){
 			val[i] *= v;
 		}
 	}
-	Mat_<T> operator += (T v){
+	inline Mat_<T> operator += (T v){
 		for(int i = 0; i < rows * cols; i++){
 			val[i] += v;
 		}
 	}
-	Mat_<T> operator -= (T v){
+	inline Mat_<T> operator -= (T v){
 		for(int i = 0; i < rows * cols; i++){
 			val[i] -= v;
 		}
@@ -559,12 +575,12 @@ public:
 		return res.str();
 	}
 	///**************************
-	static Mat_< T > zeros(int rows, int cols){
+	static inline Mat_< T > zeros(int rows, int cols){
 		Mat_< T > res(rows, cols);
 		res.val.resize(rows * cols, 0);
 		return res;
 	}
-	static Mat_< T > eye(int rows, int cols){
+	static inline Mat_< T > eye(int rows, int cols){
 		Mat_< T > res = zeros(rows, cols);
 		for(int i = 0; i < std::min(rows, cols); ++i){
 			res.val[i * cols + i] = 1;
@@ -576,7 +592,7 @@ private:
 };
 
 template< typename T >
-Mat_<T> operator* (const Mat_<T>& m1, const Mat_<T>& m2)
+inline Mat_<T> operator* (const Mat_<T>& m1, const Mat_<T>& m2)
 {
 	if(m1.cols != m2.rows)
 		return Mat_<T>();
@@ -598,7 +614,7 @@ Mat_<T> operator* (const Mat_<T>& m1, const Mat_<T>& m2)
 }
 
 template< typename T >
-Mat_<T> operator+ (const Mat_<T>& m1, const Mat_<T>& m2)
+inline Mat_<T> operator+ (const Mat_<T>& m1, const Mat_<T>& m2)
 {
 	if(m1.cols != m2.cols || m1.rows != m2.rows)
 		return Mat_<T>();
@@ -612,7 +628,7 @@ Mat_<T> operator+ (const Mat_<T>& m1, const Mat_<T>& m2)
 }
 
 template< typename T >
-Mat_<T> operator- (const Mat_<T>& m1, const Mat_<T>& m2)
+inline Mat_<T> operator- (const Mat_<T>& m1, const Mat_<T>& m2)
 {
 	if(m1.cols != m2.cols || m1.rows != m2.rows)
 		return Mat_<T>();
@@ -626,7 +642,7 @@ Mat_<T> operator- (const Mat_<T>& m1, const Mat_<T>& m2)
 }
 
 template< typename T >
-Mat_<T> operator* (const Mat_<T>& m1, T v)
+inline Mat_<T> operator* (const Mat_<T>& m1, T v)
 {
 	Mat_<T> res(m1.rows, m1.cols);
 
@@ -638,7 +654,7 @@ Mat_<T> operator* (const Mat_<T>& m1, T v)
 }
 
 template< typename T, int count >
-Mat_<T> operator* (const Mat_<T>& m1, const Vec_< T, count >& v)
+inline Mat_<T> operator* (const Mat_<T>& m1, const Vec_< T, count >& v)
 {
 	Mat_<T> res(m1.rows, 1);
 
@@ -665,7 +681,7 @@ typedef Mat_<double> Matd;
  * @return
  */
 template< typename T >
-Mat_< T > get_tangage_mat(T angle)
+inline Mat_< T > get_tangage_mat(T angle)
 {
 	T data[9] = {
 		1,	0,				0,
@@ -681,7 +697,7 @@ Mat_< T > get_tangage_mat(T angle)
  * @return
  */
 template< typename T >
-Mat_< T > get_roll_mat(T angle)
+inline Mat_< T > get_roll_mat(T angle)
 {
 	T data[9] = {
 		sin(angle),		0,		cos(angle),
@@ -697,7 +713,7 @@ Mat_< T > get_roll_mat(T angle)
  * @return
  */
 template< typename T >
-Mat_< T > get_yaw_mat(T angle)
+inline Mat_< T > get_yaw_mat(T angle)
 {
 	T data[9] = {
 		sin(angle),		cos(angle),		0,
@@ -708,7 +724,7 @@ Mat_< T > get_yaw_mat(T angle)
 }
 
 template< typename T >
-Mat_< T > get_eiler_mat(const Vec_< T, 3 >& angles)
+inline Mat_< T > get_eiler_mat(const Vec_< T, 3 >& angles)
 {
 	T yaw, tangage, bank;
 	Mat_< T > m(3, 3);
@@ -733,7 +749,7 @@ Mat_< T > get_eiler_mat(const Vec_< T, 3 >& angles)
 }
 
 template< typename T >
-Mat_< T > get_eiler_mat4(const Vec_< T, 3 >& angles)
+inline Mat_< T > get_eiler_mat4(const Vec_< T, 3 >& angles)
 {
 	T yaw, tangage, bank;
 	Mat_< T > m = Mat_< T >::eye(4, 4);
@@ -763,7 +779,7 @@ Mat_< T > get_eiler_mat4(const Vec_< T, 3 >& angles)
  * @return
  */
 template< typename T >
-Mat_<T> get_yaw_mat2(T yaw)
+inline Mat_<T> get_yaw_mat2(T yaw)
 {
 	T data[9] = {
 		cos(yaw),	0,		-sin(yaw),

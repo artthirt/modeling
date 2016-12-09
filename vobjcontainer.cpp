@@ -87,6 +87,14 @@ inline float toFloat(const std::string& val)
 	return static_cast<float>(res);
 }
 
+inline double toDouble(const std::string& val)
+{
+	double res;
+	stringstream ss = stringstream(val);
+	ss >> res;
+	return res;
+}
+
 inline int toInt(const std::string& val)
 {
 	int res;
@@ -180,21 +188,21 @@ bool VObjContainer::open(const std::string &fn)
 				continue;
 			}
 			if(sl[0] == "v"){
-				obj.v.push_back(Vec3f(toFloat(sl[1]),
-								toFloat(sl[2]),
-								toFloat(sl[3])));
+				obj.v.push_back(Vec3d(toDouble(sl[1]),
+								toDouble(sl[2]),
+								toDouble(sl[3])));
 				continue;
 			}
 			if(sl[0] == "vn"){
-				obj.vn.push_back(Vec3f(toFloat(sl[1]),
-								toFloat(sl[2]),
-								toFloat(sl[3])));
+				obj.vn.push_back(Vec3d(toDouble(sl[1]),
+								toDouble(sl[2]),
+								toDouble(sl[3])));
 				continue;
 			}
 			if(sl[0] == "vt"){
-				obj.vn.push_back(Vec3f(toFloat(sl[1]),
-								toFloat(sl[2]),
-								sl.size() > 3? toFloat(sl[3]) : 1.f));
+				obj.vn.push_back(Vec3d(toDouble(sl[1]),
+								toDouble(sl[2]),
+								sl.size() > 3? toDouble(sl[3]) : 1.f));
 				continue;
 			}
 			if(sl[0] == "f"){

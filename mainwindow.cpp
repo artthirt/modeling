@@ -262,3 +262,18 @@ void MainWindow::on_pb_generate_route_clicked()
 {
 	ui->widgetView->generate_route(ui->sb_number_point->value());
 }
+
+void MainWindow::on_chb_useIntegalError_clicked(bool checked)
+{
+	ui->widgetView->model().setUseIntegralError(checked);
+}
+
+void MainWindow::on_pb_power_clicked(bool checked)
+{
+	ui->widgetView->model().setPower(checked);
+}
+
+void MainWindow::on_pb_goToGoal_clicked(bool checked)
+{
+	ui->widgetView->model().setTrackToGoalPoint(checked);
+}

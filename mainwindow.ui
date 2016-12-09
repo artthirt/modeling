@@ -315,6 +315,14 @@
          <property name="topMargin">
           <number>0</number>
          </property>
+         <item row="2" column="3">
+          <widget class="QCheckBox" name="chb_useIntegalError">
+           <property name="text">
+            <string>Use integral 
+error for angles</string>
+           </property>
+          </widget>
+         </item>
          <item row="2" column="12">
           <widget class="QPushButton" name="pb_generate_route">
            <property name="text">
@@ -346,17 +354,10 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="12">
-          <widget class="QPushButton" name="pb_rese_angles">
-           <property name="text">
-            <string>Reset</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="14">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Common</string>
+         <item row="0" column="3">
+          <widget class="QDoubleSpinBox" name="dsb_height">
+           <property name="value">
+            <double>8.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -364,13 +365,6 @@
           <widget class="QLabel" name="label_4">
            <property name="text">
             <string>Height</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QDoubleSpinBox" name="dsb_height">
-           <property name="value">
-            <double>8.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -384,6 +378,13 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="14">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Common</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="15">
           <widget class="QDoubleSpinBox" name="dsb_common_force">
            <property name="decimals">
@@ -391,6 +392,13 @@
            </property>
            <property name="singleStep">
             <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="13">
+          <widget class="QCheckBox" name="chb_route">
+           <property name="text">
+            <string>Show route</string>
            </property>
           </widget>
          </item>
@@ -404,10 +412,39 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="13">
-          <widget class="QCheckBox" name="chb_route">
+         <item row="0" column="13">
+          <widget class="QPushButton" name="pb_rese_angles">
            <property name="text">
-            <string>Show route</string>
+            <string>Reset</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="12">
+          <widget class="QPushButton" name="pb_power">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>On/Off power on model</string>
+           </property>
+           <property name="text">
+            <string>Power</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QPushButton" name="pb_goToGoal">
+           <property name="text">
+            <string>Go to Goal</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -418,6 +455,12 @@
      <item row="0" column="0">
       <widget class="JoystickEmulate" name="widget_joystick" native="true">
        <property name="minimumSize">
+        <size>
+         <width>90</width>
+         <height>90</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>90</width>
          <height>90</height>

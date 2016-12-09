@@ -2,17 +2,24 @@
 
 #include <iostream>
 #include <ctime>
+#include <iostream>
+#include <fstream>
+
+#include <simple_xml.hpp>
+#include <QDebug>
 
 using namespace ct;
 using namespace std;
 
-const float gravity = 9.8f;
+const double gravity = 9.8f;
 const int maximum_logs = 1000;
 
-const float attenuation = 0.85f;
+const double attenuation = 0.85f;
 
 /// coefficient friction of oac-tree (for example)
-const float coeff_friction = 0.62f;
+const double coeff_friction = 0.62f;
+
+const QString config_file("config.model.xml");
 
 Model::Model()
 	: m_useSimpleHeightControl(0)
@@ -20,6 +27,9 @@ Model::Model()
 	, m_useMultipleForces(false)
 	, m_direct_model(1, 0, 0)
 	, m_roll_model(0, 1, 0)
+	, m_power(false)
+	, m_track_to_goal_point(false)
+	, m_goal_point(10, 10, 10)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -30,19 +40,32 @@ Model::Model()
 	m_force = 0;
 	m_max_force = 15.;
 
-	prev_e = 0;
-	e_I = 0;
+	m_prev_e = 0;
+	m_e_I = 0;
 
 	m_force_1 = 0;
 	m_force_2 = 0;
 	m_force_3 = 0;
 	m_force_4 = 0;
 	m_arm = 0.2f;
+
+	load_params();
+
+	if(angles_eI.empty())
+		m_use_integral = true;
+	else
+		m_use_integral = false;
+}
+
+Model::~Model()
+{
+	if(!angles_eI.empty())
+		save_params();
 }
 
 void Model::calulcate()
 {
-	Vec3f force_direction;
+	Vec3d force_direction;
 
 	state_model_angles();
 	state_model_position(force_direction);
@@ -50,16 +73,17 @@ void Model::calulcate()
 	calculate_angles();
 	simpleHeightControl(force_direction);
 
+	calculate_track_to_goal();
 }
 
 void Model::initialize()
 {
 	m_force = 0;
-	m_pos = Vec3f();
-	m_angles = Vec3f();
-	m_angles_vel = Vec3f();
-	prev_e = 0;
-	e_I = 0;
+	m_pos = Vec3d();
+	m_angles = Vec3d();
+	m_angles_vel = Vec3d();
+	m_prev_e = 0;
+	m_e_I = 0;
 }
 
 bool Model::open(const string &fn)
@@ -77,32 +101,32 @@ const std::deque<VObj> &Model::vobjs() const
 	return m_container.vobjs();
 }
 
-const Vec3f &Model::pos() const
+const Vec3d &Model::pos() const
 {
 	return m_pos;
 }
 
-Matf Model::eiler() const
+Matd Model::eiler() const
 {
 	return get_eiler_mat4(m_angles);
 }
 
-void Model::set_force(float force)
+void Model::set_force(double force)
 {
 	m_force = force;
 }
 
-float Model::force() const
+double Model::force() const
 {
 	return m_force;
 }
 
 bool Model::is_dynamic() const
 {
-	return m_force != 0 || m_pos.val[2] != 0;
+	return m_pos.val[2] != 0 || m_power;
 }
 
-float Model::dt() const
+double Model::dt() const
 {
 	return m_dt;
 }
@@ -137,45 +161,44 @@ void Model::push_log(const string &str)
 void Model::setSimpleHeightControl(bool val)
 {
 	m_useSimpleHeightControl = val;
-	m_force = 0.0001f;
 }
 
-void Model::setHeightGoal(float h)
+void Model::setHeightGoal(double h)
 {
 	m_heightGoal = h;
 }
 
-float Model::tangageFloat() const
+double Model::tangageGoal() const
 {
 	return rad2angle(m_angles_goal[0]);
 }
 
-void Model::setTangageGoal(float v)
+void Model::setTangageGoal(double v)
 {
 	m_angles_goal[0] = angle2rad(v);
 }
 
-float Model::rollGoal() const
+double Model::rollGoal() const
 {
 	return rad2angle(m_angles_goal[1]);
 }
 
-void Model::setRollGoal(float v)
+void Model::setRollGoal(double v)
 {
 	m_angles_goal[1] = angle2rad(v);
 }
 
-float Model::yawGoal() const
+double Model::yawGoal() const
 {
 	return rad2angle(m_angles_goal[2]);
 }
 
-void Model::setYawGoal(float v)
+void Model::setYawGoal(double v)
 {
 	m_angles_goal[2] = angle2rad(v);
 }
 
-void Model::setForces(float f1, float f2, float f3, float f4)
+void Model::setForces(double f1, double f2, double f3, double f4)
 {
 	if(f1 < 0) f1 = 0;
 	if(f2 < 0) f2 = 0;
@@ -187,7 +210,7 @@ void Model::setForces(float f1, float f2, float f3, float f4)
 	m_force_4 = f4;
 }
 
-void Model::setForce(int index, float v)
+void Model::setForce(int index, double v)
 {
 	if(v < 0)
 		v = 0;
@@ -212,10 +235,9 @@ void Model::setForce(int index, float v)
 void Model::setUseMultipleForces(bool f)
 {
 	m_useMultipleForces = f;
-	m_force = 0.0001f;
 }
 
-float Model::force(int index)
+double Model::force(int index)
 {
 	if(index == 1)
 		return m_force_1;
@@ -230,63 +252,83 @@ float Model::force(int index)
 
 void Model::reset_angles()
 {
-	m_angles = Vec3f::zeros();
+	m_angles = Vec3d::zeros();
 	m_force_1 = 0;
 	m_force_2 = 0;
 	m_force_3 = 0;
 	m_force_4 = 0;
 
-	m_pos = Vec3f::zeros();
+	m_pos = Vec3d::zeros();
 }
 
-void Model::setYaw(float v)
+void Model::setYaw(double v)
 {
 	m_angles[2] = angle2rad(v);
 }
 
-void Model::setRoll(float v)
+void Model::setRoll(double v)
 {
 	m_angles[1] = angle2rad(v);
 }
 
-void Model::setTangage(float v)
+void Model::setTangage(double v)
 {
 	m_angles[0] = angle2rad(v);
 }
 
-float Model::roll() const
+double Model::roll() const
 {
-	Vec3f v = m_roll_model;
+	Vec3d v = m_roll_model;
 	v[2] = 0;
-	float x = v.norm();
-	float y = m_roll_model[2];
+	double x = v.norm();
+	double y = m_roll_model[2];
 	return rad2angle(atan2(y, x));
 }
 
-float Model::tangage() const
+double Model::tangage() const
 {
-	Vec3f v = m_direct_model;
+	Vec3d v = m_direct_model;
 	v[2] = 0;
-	float x = v.norm();
-	float y = m_direct_model[2];
+	double x = v.norm();
+	double y = m_direct_model[2];
 	return rad2angle(atan2(y, x));
 }
 
-float Model::yaw() const
+double Model::yaw() const
 {
-	Vec3f v = m_direct_model;
+	Vec3d v = m_direct_model;
 	v[2] = 0;
 	return rad2angle(atan2(v[1], v[0]));
 }
 
-Vec3f Model::direction_force() const
+Vec3d Model::direction_force() const
 {
 	return m_direction_force;
 }
 
-Vec3f Model::direct_model() const
+Vec3d Model::direct_model() const
 {
 	return m_direct_model;
+}
+
+bool Model::isUseInegralError() const
+{
+	return m_use_integral;
+}
+
+void Model::setUseIntegralError(bool v)
+{
+	m_use_integral = v;
+}
+
+void Model::setPower(bool v)
+{
+	m_power = v;
+}
+
+bool Model::isPower() const
+{
+	return m_power;
 }
 
 void Model::calculate_angles()
@@ -297,22 +339,32 @@ void Model::calculate_angles()
 	/// [0] - tangage
 	/// [1] - roll
 	/// [2] - yaw
-	ct::Vec3f e = m_angles_goal - m_angles;
+	ct::Vec3d e = m_angles_goal - m_angles;
 	e = crop_angles(e);
 
-	const float kp = 10;
-	const float kd = 20;
+	const double kp = 30;
+	const double ki = 0.03;
+	const double kd = 70;
 
-	Vec3f de = e - prev_angles_e;
+	Vec3d eI;
+	if(m_use_integral){
+		eI = angles_eI + e;
+		//eI = crop_angles(eI);
+		angles_eI = eI;
+	}else{
+		eI = angles_eI;
+	}
+
+	Vec3d de = e - prev_angles_e;
 	de = crop_angles(de);
 	prev_angles_e = e;
 
-	Vec3f u = e * kp + de * kd;
+	Vec3d u = e * kp + eI * ki + de * kd;
 
 	//u = sign(u) * (u * u);
 	u *= m_mass * m_dt;
 
-	float avg_f = m_force;
+	double avg_f = m_force;
 	/// f1 + f3 -> -tangage
 	///	f2 + f4 -> +tangage
 	///	f1 + f4 -> -roll
@@ -327,11 +379,11 @@ void Model::calculate_angles()
 	m_force_2 = avg_f/4 - u[0] + u[1] + u[2];
 	m_force_4 = avg_f/4 - u[0] - u[1] - u[2];
 
-	float part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
-	float pf1 = m_force_1/part_f;
-	float pf2 = m_force_2/part_f;
-	float pf3 = m_force_3/part_f;
-	float pf4 = m_force_4/part_f;
+	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	double pf1 = m_force_1/part_f;
+	double pf2 = m_force_2/part_f;
+	double pf3 = m_force_3/part_f;
+	double pf4 = m_force_4/part_f;
 
 	m_force_1 = pf1 * m_force;
 	m_force_2 = pf2 * m_force;
@@ -348,10 +400,10 @@ void Model::calculate_angles()
 //	m_force_4 = /*avg_f*/ + u[2]/4;
 //	m_force_2 = /*avg_f*/ + u[2]/4;
 
-	m_force_1 = std::max(0.f, m_force_1);
-	m_force_2 = std::max(0.f, m_force_2);
-	m_force_3 = std::max(0.f, m_force_3);
-	m_force_4 = std::max(0.f, m_force_4);
+	m_force_1 = std::max(0., m_force_1);
+	m_force_2 = std::max(0., m_force_2);
+	m_force_3 = std::max(0., m_force_3);
+	m_force_4 = std::max(0., m_force_4);
 
 	m_force_1 = std::min(m_max_force, m_force_1);
 	m_force_2 = std::min(m_max_force, m_force_2);
@@ -370,52 +422,62 @@ void Model::calculate_angles()
 
 void Model::state_model_angles()
 {
-	float df_12 = m_force_1 - m_force_2;
-	float df_34 = m_force_3 - m_force_4;
+	/// ************** if not power then not change angles
+	if(!m_power)
+		return;
+
+	/// for some uncertainty that influence the each force
+	const double coeff_f1 = 0.985;
+	const double coeff_f2 = 0.983;
+	const double coeff_f3 = 0.988;
+	const double coeff_f4 = 0.982;
+
+	double df_12 = coeff_f1 * m_force_1 - coeff_f2 * m_force_2;
+	double df_34 = coeff_f3 * m_force_3 - coeff_f4 * m_force_4;
 
 	if(df_12 != 0 || df_34 != 0){
 
-		float a_12 = df_12 / m_mass;
-		float a_34 = df_34 / m_mass;
+		double a_12 = df_12 / m_mass;
+		double a_34 = df_34 / m_mass;
 
 		/// a = F / m; a = w^2 * R
-		float w_12 = sqrt(std::abs(a_12) / m_arm) * m_dt;
+		double w_12 = sqrt(std::abs(a_12) / m_arm) * m_dt;
 		if(a_12 < 0) w_12 = -w_12;
-		float w_34 = sqrt(std::abs(a_34) / m_arm) * m_dt;
+		double w_34 = sqrt(std::abs(a_34) / m_arm) * m_dt;
 		if(a_34 < 0) w_34 = -w_34;
-		float w_tan_12	= w_12 * sinf(M_PI / 4.f);
-		float w_roll_12 = w_12 * cosf(M_PI / 4.f);
-		float w_tan_34	= w_34 * sinf(M_PI / 4.f);
-		float w_roll_34 = w_34 * cosf(M_PI / 4.f);
+		double w_tan_12	= w_12 * sin(M_PI / 4.);
+		double w_roll_12 = w_12 * cos(M_PI / 4.);
+		double w_tan_34	= w_34 * sin(M_PI / 4.);
+		double w_roll_34 = w_34 * cos(M_PI / 4.);
 
 		m_angles[0] += w_tan_12 + w_tan_34;
 		m_angles[1] += w_roll_34 - w_roll_12;
 
 	}
 	/// yaw = F1 + F2 - (F3 + F4)
-	float df_1234 = m_force_1 + m_force_2 - m_force_3 - m_force_4;
+	double df_1234 = m_force_1 + m_force_2 - m_force_3 - m_force_4;
 	if(df_1234){
-		float a1234 = df_1234 / m_mass;
-		float w_1234 = sqrt(std::abs(a1234) / m_arm) * m_dt;
+		double a1234 = df_1234 / m_mass;
+		double w_1234 = sqrt(std::abs(a1234) / m_arm) * m_dt;
 		if(a1234 < 0) w_1234 = -w_1234;
 		m_angles[2] += w_1234;
 	}
 
-	m_force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	m_force = coeff_f1 * m_force_1 + coeff_f2 * m_force_2 + coeff_f3 * m_force_3 + coeff_f4 * m_force_4;
 }
 
-void Model::state_model_position(Vec3f &force_direction)
+void Model::state_model_position(Vec3d &force_direction)
 {
-	Vec3f vel(0, 0, 1);
-	Vec3f direct_model(1, 0, 0);
-	Vec3f roll_model(0, 1, 0);
+	Vec3d vel(0, 0, 1);
+	Vec3d direct_model(1, 0, 0);
+	Vec3d roll_model(0, 1, 0);
 
-	Matf m = get_eiler_mat(m_angles);
+	Matd m = get_eiler_mat(m_angles);
 	m = m.t();
 
 	//push_log("eiler:\n" + m.operator std::string());
 
-	Matf mv = m * vel;
+	Matd mv = m * vel;
 
 	//push_log("mult to vec:\n" + mv.operator std::string());
 
@@ -432,20 +494,25 @@ void Model::state_model_position(Vec3f &force_direction)
 	mv = m * roll_model;
 	m_roll_model = mv.toVec<3>();
 	//push_log("from mat: " + vel.operator std::string());
-	vel *= (m_force/m_mass * m_dt);
+
+	///************* engine power on/off
+	double force = m_power? m_force : 0;
+	///*************
+
+	vel *= (force/m_mass * m_dt);
 
 	m_vel += vel;
 
-	m_vel += Vec3f(0.f, 0.f, -m_mass * gravity * m_dt);
+	m_vel += Vec3d(0.f, 0.f, -m_mass * gravity * m_dt);
 
 	m_vel *= attenuation;
 
 	push_log("after force: " + m_vel.operator std::string());
 
 	if(m_pos[2] + m_vel[2] <= 0){
-		Vec3f v = m_vel;
+		Vec3d v = m_vel;
 		m_vel[2] = 0;
-		float v_ground = v.norm();
+		double v_ground = v.norm();
 		/// if the model on ground
 		if(v_ground / m_dt < coeff_friction * gravity){
 			m_vel[0] = 0;
@@ -461,14 +528,14 @@ void Model::state_model_position(Vec3f &force_direction)
 
 	if(m_pos[2] < 0){
 		m_pos[2] = 0;
-		m_vel = Vec3f::zeros();
+		m_vel = Vec3d::zeros();
 		cout << "break\n";
 	}
 
 	if(m_pos[2] > virtual_z_edge){
 		m_pos[2] = virtual_z_edge;
 	}
-	Vec3f f = m_pos;
+	Vec3d f = m_pos;
 	f[2] = 0;
 	if(f.norm() > virtual_xy_edge){
 		f /= f.norm();
@@ -478,7 +545,7 @@ void Model::state_model_position(Vec3f &force_direction)
 	}
 }
 
-void Model::simpleHeightControl(const Vec3f &normal)
+void Model::simpleHeightControl(const Vec3d &normal)
 {
 	if(!m_useSimpleHeightControl)
 		return;
@@ -488,32 +555,32 @@ void Model::simpleHeightControl(const Vec3f &normal)
 		return;
 	}
 
-	float e = m_heightGoal - m_pos[2];
+	double e = m_heightGoal - m_pos[2];
 //	Vec3f vec_force = normal * m_force;
 //	float force = vec_force[2];
 
-	const float kp = 1.1f;
-	const float kd = 20.0f;
-	const float ki = 0.005f;
+	const double kp = 1.1;
+	const double kd = 20.0;
+	const double ki = 0.005;
 
-	e_I += e;
+	m_e_I += e;
 
-	float de = e - prev_e;
-	prev_e = e;
+	double de = e - m_prev_e;
+	m_prev_e = e;
 
-	float u = kp * e + gravity + kd * de;
+	double u = kp * e + gravity + kd * de;
 
-	u = std::max(0.f, std::min(m_max_force, u));
+	u = std::max(0., std::min(m_max_force, u));
 
-	float force = m_mass * u;
+	double force = m_mass * u;
 
-	float part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
 
 	if(part_f > 0){
-		float pf1 = m_force_1 / part_f;
-		float pf2 = m_force_2 / part_f;
-		float pf3 = m_force_3 / part_f;
-		float pf4 = m_force_4 / part_f;
+		double pf1 = m_force_1 / part_f;
+		double pf2 = m_force_2 / part_f;
+		double pf3 = m_force_3 / part_f;
+		double pf4 = m_force_4 / part_f;
 
 		m_force_1 = pf1 * force;
 		m_force_2 = pf2 * force;
@@ -525,4 +592,89 @@ void Model::simpleHeightControl(const Vec3f &normal)
 		m_force_3 = force / 4;
 		m_force_4 = force / 4;
 	}
+}
+
+void Model::load_params()
+{
+	QMap< QString, QVariant > params;
+	if(!SimpleXML::load_param(config_file, params))
+		return;
+
+	angles_eI[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
+	angles_eI[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
+	angles_eI[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
+}
+
+void Model::save_params()
+{
+	QMap< QString, QVariant > params, pang, pint;
+
+
+	pint["tangage"] = angles_eI[0];
+	pint["roll"] = angles_eI[1];
+	pint["yaw"] = angles_eI[2];
+
+	pang["integral"] = pint;
+
+	params["angles"] = pang;
+
+	SimpleXML::save_param(config_file, params);
+}
+
+void Model::setGoalPoint(const ct::Vec3d &pt)
+{
+	m_goal_point = pt;
+}
+
+ct::Vec3d Model::goal_point() const
+{
+	return m_goal_point;
+}
+
+void Model::setTrackToGoalPoint(bool v)
+{
+	m_track_to_goal_point = v;
+}
+
+bool Model::isTrackToGoalPoint() const
+{
+	return m_track_to_goal_point;
+}
+
+void Model::calculate_track_to_goal()
+{
+	if(!m_track_to_goal_point)
+		return;
+
+	Vec3d e = m_goal_point - m_pos;
+	if(e.norm() < m_radius_goal)
+		return;
+
+	Vec3d direct = e / e.norm();
+
+	Vec3d p1 = m_direct_model, p2 = direct;
+	p1[2] = 0, p2[2] = 0;
+
+	if(p1.norm() > 0 && p2.norm() > 0){
+		p1 /= p1.norm(), p2 /= p2.norm();
+		Vec3d p3 = p1.cross(p2);
+
+		double cosa = p1.dot(p2);
+		double sina = p1.cross(p2).norm();
+
+		double a = atan2(sina, cosa);
+		a = p3[2] > 0 ? a : -a;
+
+		qDebug() << "angleToGoal:" << rad2angle(a) << p3[2];
+	}
+}
+
+double Model::radius_goal() const
+{
+	return m_radius_goal;
+}
+
+void Model::setRadiusGoal(double v)
+{
+	m_radius_goal = v;
 }

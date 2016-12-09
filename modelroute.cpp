@@ -69,7 +69,7 @@ std::vector<ct::Vec3f> &ModelRoute::points()
 	return m_points;
 }
 
-const Vec3f &ModelRoute::current_point() const
+const Vec3f ModelRoute::current_point() const
 {
 	if(!isEnd())
 		return m_points[m_current_index];
@@ -85,7 +85,7 @@ float ModelRoute::distance(const ct::Vec3f &pt) const
 {
 	if(m_points.size() && !isEnd())
 		return (pt - m_points[m_current_index]).norm();
-	return 99999999999999;
+	return 99999999999999.f;
 }
 
 Vec3f ModelRoute::direction(Vec3f &pt) const

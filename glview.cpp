@@ -19,18 +19,18 @@ typedef float GLVertex3f[3];
 
 ////////////////////////////////////
 
-void draw_line(const ct::Vec3f& v, const ct::Vec3f & col = ct::Vec3f::ones(), float scale = 1.)
+void draw_line(const ct::Vec3d& v, const ct::Vec3d & col = ct::Vec3d::ones(), double scale = 1.)
 {
 	glLineWidth(3);
 
 	glPushMatrix();
 
-	glScalef(scale, scale, scale);
+	glScaled(scale, scale, scale);
 
-	glColor3fv(col.ptr());
+	glColor3dv(col.ptr());
 	glBegin(GL_LINES);
-	glVertex3fv(ct::Vec3f::zeros().ptr());
-	glVertex3fv(v.ptr());
+	glVertex3dv(ct::Vec3d::zeros().ptr());
+	glVertex3dv(v.ptr());
 	glEnd();
 
 	glPopMatrix();
@@ -38,26 +38,46 @@ void draw_line(const ct::Vec3f& v, const ct::Vec3f & col = ct::Vec3f::ones(), fl
 	glLineWidth(1);
 }
 
-void draw_cylinder(float R, float H, int cnt = 10, const ct::Vec3f& col = ct::Vec4f::ones())
+void draw_cylinder(double R, double H, int cnt = 10, const ct::Vec3d& col = ct::Vec4d::ones())
 {
-	float z0 = 0;
-	float z1 = H;
+	double z0 = 0;
+	double z1 = H;
 
-	glColor4fv(col.ptr());
+	glColor4dv(col.ptr());
 
 	glBegin(GL_TRIANGLE_STRIP);
 	for(int i = 0; i <= cnt; i++){
-		float xi = sin(2. * i / cnt * M_PI);
-		float yi = cos(2. * i / cnt * M_PI);
-		float x0 = R * xi;
-		float y0 = R * yi;
+		double xi = sin(2. * i / cnt * M_PI);
+		double yi = cos(2. * i / cnt * M_PI);
+		double x0 = R * xi;
+		double y0 = R * yi;
 
 //		x1 = R * sin(2. * (i + 1) / cnt * M_PI);
 //		y1 = R * cos(2. * (i + 1) / cnt * M_PI);
 
-		glNormal3f(yi, xi, 0);
-		glVertex3f(x0, y0, z0);
-		glVertex3f(x0, y0, z1);
+		glNormal3d(yi, xi, 0);
+		glVertex3d(x0, y0, z0);
+		glVertex3d(x0, y0, z1);
+	}
+	glEnd();
+}
+
+void draw_circle(const ct::Vec3d &pt, double R, const ct::Vec4d &col = ct::Vec4d::zeros())
+{
+	const int cnt = 32;
+	ct::Vec3d z1 = pt, p1;
+
+	glColor4dv(col.val);
+	glBegin(GL_TRIANGLE_STRIP);
+	for(int i = 0; i <= cnt; i++){
+		glVertex3dv(z1.val);
+
+		double id = 1. * i / cnt * 2 * M_PI;
+		double x = R * sin(id);
+		double y = R * cos(id);
+
+		p1 = pt + ct::Vec3d(x, y, 0);
+		glVertex3dv(p1.val);
 	}
 	glEnd();
 }
@@ -71,10 +91,13 @@ GLView::GLView(QWidget *parent) :
   , m_update(false)
   , m_delta_z(0)
   , m_current_z(0)
-  , m_color_space(ct::Vec3f::ones())
+  , m_color_space(ct::Vec3d::ones())
   , m_tracking(false)
   , m_tracking_angle(0)
   , m_show_route(false)
+  , m_prev_e_track(0)
+  , m_prev_u(0)
+  , m_timer_goal(0)
 {
 	ui->setupUi(this);
 
@@ -195,9 +218,11 @@ void GLView::init()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	glEnable(GL_POINT_SMOOTH);
+
 	glFrontFace(GL_FRONT);
 
-	glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GLView::draw_net()
@@ -247,13 +272,13 @@ void GLView::draw_model()
 
 	glPushMatrix();
 
-	ct::Vec3f pos = m_model.pos();
-	ct::Matf eiler = m_model.eiler();
+	ct::Vec3d pos = m_model.pos();
+	ct::Matd eiler = m_model.eiler();
 	glTranslatef(pos[0], pos[1], pos[2]);
 
-	draw_line(m_model.direction_force(), ct::Vec3f(1, 0.3f, 0.3f), 1);
+	draw_line(m_model.direction_force(), ct::Vec3d(1, 0.3, 0.3), 1);
 
-	glMultMatrixf(eiler.ptr());
+	glMultMatrixd(eiler.ptr());
 
 //	ct::Matf mat = ct::get_eiler_mat4<float>(m_angles);
 
@@ -279,8 +304,8 @@ void GLView::draw_model()
 
 		const std::map< std::string, Mtl > &mtls = obj.mtls;
 
-		const std::vector< ct::Vec3f> &_v = obj.v;
-		const std::vector< ct::Vec3f> &_vn = obj.vn;
+		const std::vector< ct::Vec3d> &_v = obj.v;
+		const std::vector< ct::Vec3d> &_vn = obj.vn;
 
 		for(auto itf = obj.faces.begin(); itf != obj.faces.end(); itf++){
 
@@ -314,10 +339,10 @@ void GLView::draw_model()
 						fni[j] - 1,
 						fni[j + 1] - 1};
 					for(size_t l = 0; l < 3; ++l){
-						const ct::Vec3f& v = _v[iv[l]];
-						const ct::Vec3f& vn = _vn[in[l]];
-						glNormal3fv(vn.val);
-						glVertex3fv(v.val);
+						const ct::Vec3d& v = _v[iv[l]];
+						const ct::Vec3d& vn = _vn[in[l]];
+						glNormal3dv(vn.val);
+						glVertex3dv(v.val);
 					}
 
 					glEnd();
@@ -337,10 +362,11 @@ void GLView::draw_route()
 
 	glLineWidth(3);
 
-
 	const std::vector< ct::Vec3f > &pts = m_modelRoute.points();
 
-	glColor3f(0.8, 0.5, 0.7);
+	glEnable(GL_BLEND);
+
+	glColor3f(0.8f, 0.5f, 0.7f);
 
 	glBegin(GL_LINE_STRIP);
 	for(size_t i = 0; i < pts.size(); i++){
@@ -350,7 +376,6 @@ void GLView::draw_route()
 
 	glPointSize(10);
 
-	glEnable(GL_POINT_SMOOTH);
 	glBegin(GL_POINTS);
 	for(size_t i = 1; i < pts.size() - 1; i++){
 		glVertex3fv(pts[i].val);
@@ -358,15 +383,44 @@ void GLView::draw_route()
 	glEnd();
 
 	glBegin(GL_POINTS);
-	glColor3f(0.1, 0.7, 0.1);
+	glColor3f(0.1f, 0.7f, 0.1f);
 	glVertex3fv(pts[0].val);
-	glColor3f(0.7, 0.1, 0.1);
+	glColor3f(0.7f, 0.1f, 0.1f);
 	glVertex3fv(pts[pts.size() - 1].val);
 	glEnd();
 
-	glDisable(GL_POINT_SMOOTH);
+	glDisable(GL_BLEND);
 
 	glLineWidth(1);
+}
+
+void GLView::draw_goal()
+{
+	using namespace ct;
+
+	Vec3d p1 = m_model.goal_point();
+	Vec3d p2 = p1;
+	p2[2] = 0;
+
+	glPointSize(20);
+
+	glColor3f(1.f, 0.3f, 0.1f);
+
+	glEnable(GL_BLEND);
+
+	glBegin(GL_POINTS);
+	glVertex3dv(p1.val);
+	glVertex3dv(p2.val);
+	glEnd();
+
+	glPointSize(1);
+
+	Vec4d col(0.8, 0.5, 0.3, 0.5 + 0.35 * sin(m_timer_goal));
+
+	draw_circle(p2, 2, col);
+	glDisable(GL_BLEND);
+
+	m_timer_goal += 0.1;
 }
 
 void GLView::load_xml()
@@ -413,6 +467,35 @@ void GLView::save_xml()
 	params["goal_yaw"] = m_model.yawGoal();
 
 	SimpleXML::save_param(xml_config, params);
+}
+
+void GLView::calculate_track()
+{
+//		ct::Vec3f ps = m_model.pos();
+	ct::Vec3d dm = m_model.direct_model();
+
+	const double kp = 0.1;
+	const double kd = 0.3;
+
+	dm[2] = 0;
+	dm /= dm.norm();
+	double angle = M_PI/2 - atan2(dm[1], dm[0]);
+	double e = angle - ct::angle2rad(m_tracking_angle);
+	e = atan2(sin(e), cos(e));
+
+	double de = e - m_prev_e_track;
+	m_prev_e_track = e;
+	de = atan2(sin(de), cos(de));
+
+	double u = kp * e + kd * de;
+	u = ct::rad2angle(u);
+
+	double avg_u = 0.5 * (m_prev_u + u);
+	m_prev_u = avg_u;
+
+	m_tracking_angle += avg_u;
+
+//		gluLookAt(ps[0], ps[1], ps[2], ps[0] + dm[0], ps[1] + dm[1], ps[2] + dm[2], 0, 0, 1);
 }
 
 
@@ -486,19 +569,8 @@ void GLView::glDraw()
 
 
 	if(m_tracking){
-//		ct::Vec3f ps = m_model.pos();
-		ct::Vec3f dm = m_model.direct_model();
+		calculate_track();
 
-		float kp = 0.1f;
-
-		dm[2] = 0;
-		dm /= dm.norm();
-		float angle = M_PI/2 - atan2(dm[1], dm[0]);
-		float e = angle - ct::angle2rad(m_tracking_angle);
-		e = atan2(sin(e), cos(e));
-		float u = kp * e;
-		m_tracking_angle += ct::rad2angle(u);
-//		gluLookAt(ps[0], ps[1], ps[2], ps[0] + dm[0], ps[1] + dm[1], ps[2] + dm[2], 0, 0, 1);
 		glTranslatef(0, 0, - (m_current_z + m_delta_z));
 		glRotatef(m_delta_pt.x(), 0, 1, 0);
 		glRotatef(m_delta_pt.y(), 1, 0, 0);
@@ -520,8 +592,12 @@ void GLView::glDraw()
 		draw_route();
 	}
 
+	if(m_model.isTrackToGoalPoint()){
+		draw_goal();
+	}
+
 	glEnable(GL_BLEND);
-	draw_cylinder(virtual_xy_edge, 0.3f, 16, ct::Vec4f(0.8f, 0.4f, 0.1f, 0.5f));
+	draw_cylinder(virtual_xy_edge, 0.3, 16, ct::Vec4d(0.8, 0.4, 0.1, 0.5));
 	glDisable(GL_BLEND);
 
 	swapBuffers();

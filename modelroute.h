@@ -17,7 +17,7 @@ public:
 
 	std::vector<ct::Vec3f> &points();
 
-	const ct::Vec3f &current_point() const;
+	const ct::Vec3f current_point() const;
 	size_t current_index() const;
 	float distance(const ct::Vec3f& pt) const;
 	ct::Vec3f direction(ct::Vec3f& pt) const;

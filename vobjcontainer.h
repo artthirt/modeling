@@ -30,9 +30,9 @@ class VObj{
 public:
 	std::string mtlfile;
 
-	std::vector< ct::Vec3f > v;
-	std::vector< ct::Vec3f > vn;
-	std::vector< ct::Vec3f > t;
+	std::vector< ct::Vec3d > v;
+	std::vector< ct::Vec3d > vn;
+	std::vector< ct::Vec3d > t;
 
 	std::map< std::string, Mtl > mtls;
 

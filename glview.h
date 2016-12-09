@@ -50,8 +50,11 @@ private:
 	bool m_init;
 	bool m_update;
 
+	double m_prev_e_track;
+	double m_prev_u;
+
 	bool m_tracking;
-	float m_tracking_angle;
+	double m_tracking_angle;
 
 	bool m_show_route;
 
@@ -61,28 +64,32 @@ private:
 	QPointF m_mouse_pt;
 	QPointF m_delta_pt;
 	QPointF m_wheel_pt;
-	float m_delta_z;
-	float m_current_z;
+	double m_delta_z;
+	double m_current_z;
 
 	Model m_model;
 
 	bool m_left_down;
 	bool m_wheel_down;
 
-	ct::Vec3f m_angles;
+	ct::Vec3d m_angles;
 
-	ct::Vec3f m_color_space;
+	ct::Vec3d m_color_space;
 
 	ModelRoute m_modelRoute;
+
+	double m_timer_goal;
 
 	void init();
 	void draw_net();
 	void draw_model();
 	void draw_route();
+	void draw_goal();
 
 	void load_xml();
 	void save_xml();
 
+	void calculate_track();
 	// QGLWidget interface
 public slots:
 	virtual void updateGL();
