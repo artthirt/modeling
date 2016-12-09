@@ -116,6 +116,11 @@ GLView::GLView(QWidget *parent) :
 	load_xml();
 
 	setMouseTracking(true);
+
+	QGLFormat newFormat = format();
+	newFormat.setSampleBuffers(true);
+	newFormat.setSamples(16);
+	setFormat(newFormat);
 }
 
 GLView::~GLView()
@@ -223,6 +228,10 @@ void GLView::init()
 	glFrontFace(GL_FRONT);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glEnable(GL_MULTISAMPLE);
+
+
 }
 
 void GLView::draw_net()

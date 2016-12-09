@@ -343,7 +343,7 @@ void Model::calculate_angles()
 	e = crop_angles(e);
 
 	const double kp = 30;
-	const double ki = 0.03;
+	const double ki = 0.7;
 	const double kd = 70;
 
 	Vec3d eI;
