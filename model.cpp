@@ -650,20 +650,22 @@ void Model::calculate_track_to_goal()
 	if(e.norm() < m_radius_goal)
 		return;
 
-	Vec3d direct = e / e.norm();
+	/// get angle between goal and direction of model
+
+	Vec3d direct = e / e.norm();			/// direction to goal
 
 	Vec3d p1 = m_direct_model, p2 = direct;
-	p1[2] = 0, p2[2] = 0;
+	p1[2] = 0, p2[2] = 0;					/// only Oxy plane
 
 	if(p1.norm() > 0 && p2.norm() > 0){
-		p1 /= p1.norm(), p2 /= p2.norm();
-		Vec3d p3 = p1.cross(p2);
+		p1 /= p1.norm(), p2 /= p2.norm();	/// normalize
+		Vec3d p3 = p1.cross(p2);			/// cross product for get left or right a side of direction
 
-		double cosa = p1.dot(p2);
-		double sina = p1.cross(p2).norm();
+		double cosa = p1.dot(p2);			/// cos angle
+		double sina = p1.cross(p2).norm();	/// sin angle
 
-		double a = atan2(sina, cosa);
-		a = p3[2] > 0 ? a : -a;
+		double a = atan2(sina, cosa);		/// angle
+		a = p3[2] > 0 ? a : -a;				/// direction of angle
 
 		qDebug() << "angleToGoal:" << rad2angle(a) << p3[2];
 	}
