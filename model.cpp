@@ -690,8 +690,8 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(10.);
 
-		const double kp = 1;
-		const double kd = 30;
+		const double kp = 0.9;
+		const double kd = 60;
 
 		double e_yaw = a;
 		double de_yaw = e_yaw - m_prev_goal_e[2];
@@ -718,13 +718,22 @@ void Model::calculate_track_to_goal()
 
 		if(exy.norm() > m_radius_goal){
 
-			ta = ta * log(1 + exy.norm())/2.;
-			ra = ra * log(1 + exy.norm())/2.;
+			ta = ta * log(1 + (exy.norm()));
+			ra = ra * log(1 + (exy.norm()));
 
-			ta = value2range(ta, max_other_change);
-			ra = value2range(ra, max_other_change);
-			m_angles_goal[0] = ta;
-			m_angles_goal[1] = ra;
+			double dta = ta - m_prev_goal_e[0];
+			double dra = ra - m_prev_goal_e[1];
+
+			m_prev_goal_e[0] = ta;
+			m_prev_goal_e[1] = ra;
+
+			double uta = kp * ta + kd * dta;
+			double ura = kp * ra + kd * dra;
+
+			uta = value2range(uta, max_other_change);
+			ura = value2range(ura, max_other_change);
+			m_angles_goal[0] = uta;
+			m_angles_goal[1] = ura;
 
 		}else{
 			m_angles_goal[0] = 0;
