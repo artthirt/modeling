@@ -28,7 +28,7 @@ public:
 	 */
 	Vec_(const Vec_<T, count-1 >& v){
 		std::copy((char*)v.val, (char*)v.val + sizeof(val), (char*)val);
-		std::fill((char*)val + (count - 1) * sizeof(T), (char*)val + sizeof(T), '/0');
+		std::fill((char*)val + (count - 1) * sizeof(T), (char*)val + sizeof(T), 0);
 	}
 	/**
 	 * @brief Vec_
@@ -50,7 +50,7 @@ public:
 	 */
 	Vec_<T, count>& operator=(const Vec_<T, count-1 >& v){
 		std::copy((char*)v.val, (char*)v.val + sizeof(val), (char*)val);
-		std::fill((char*)val + (count - 1) * sizeof(T), (char*)val + sizeof(T), '/0');
+		std::fill((char*)val + (count - 1) * sizeof(T), (char*)val + sizeof(T), 0);
 		return *this;
 	}
 	/**
@@ -67,14 +67,14 @@ public:
 		if(count < 1)
 			return;
 		val[0] = a0;
-		std::fill((char*)val + sizeof(T), (char*)val + sizeof(val), '/0');
+		std::fill((char*)val + sizeof(T), (char*)val + sizeof(val), 0);
 	}
 	Vec_(T a0, T a1){
 		if(count < 2)
 			return;
 		val[0] = a0;
 		val[1] = a1;
-		std::fill((char*)val + 2 * sizeof(T), (char*)val + sizeof(val), '/0');
+		std::fill((char*)val + 2 * sizeof(T), (char*)val + sizeof(val), 0);
 	}
 	Vec_(T a0, T a1, T a2){
 		if(count < 3)
@@ -82,7 +82,7 @@ public:
 		val[0] = a0;
 		val[1] = a1;
 		val[2] = a2;
-		std::fill((char*)val + 3 * sizeof(T), (char*)val + sizeof(val), '/0');
+		std::fill((char*)val + 3 * sizeof(T), (char*)val + sizeof(val), 0);
 	}
 	Vec_(T a0, T a1, T a2, T a3){
 		if(count < 4)
@@ -91,7 +91,7 @@ public:
 		val[1] = a1;
 		val[2] = a2;
 		val[3] = a3;
-		std::fill((char*)val + 4 * sizeof(T), (char*)val + sizeof(val), '/0');
+		std::fill((char*)val + 4 * sizeof(T), (char*)val + sizeof(val), 0);
 	}
 	T& operator[] (int index){
 		return val[index];

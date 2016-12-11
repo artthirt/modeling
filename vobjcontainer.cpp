@@ -175,7 +175,7 @@ bool VObjContainer::open(const std::string &fn)
 //				}
 
 				//obj.clear();
-				cout << "name: " << sl[1].c_str() << "; vertex offset: " << obj.v.size();
+				cout << "name: " << sl[1].c_str() << "; vertex offset: " << obj.v.size() << endl;
 
 				obj_name = sl[1];
 
@@ -248,7 +248,7 @@ bool VObjContainer::open(const std::string &fn)
 		for(auto it = obj.faces.begin(); it != obj.faces.end(); it++){
 			VObj::Faces & faces = (*it).second;
 
-			cout << "face:" << (*it).first.c_str() << faces.fn.size() << faces.ft.size() << faces.fv.size();
+			cout << "face:" << (*it).first.c_str() << faces.fn.size() << faces.ft.size() << faces.fv.size() << endl;
 
 			for(size_t i = 0; i < faces.fv.size(); i++){
 

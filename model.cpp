@@ -6,7 +6,6 @@
 #include <fstream>
 
 #include <simple_xml.hpp>
-#include <QDebug>
 
 using namespace ct;
 using namespace std;
@@ -20,6 +19,17 @@ const double attenuation = 0.85f;
 const double coeff_friction = 0.62f;
 
 const QString config_file("config.model.xml");
+
+////////////////////////////////////////////////
+
+string fromFloat(double v)
+{
+	stringstream ss;
+	ss << v;
+	return ss.str();
+}
+
+////////////////////////////////////////////////
 
 Model::Model()
 	: m_useSimpleHeightControl(0)
@@ -667,7 +677,7 @@ void Model::calculate_track_to_goal()
 		double a = atan2(sina, cosa);		/// angle
 		a = p3[2] > 0 ? a : -a;				/// direction of angle
 
-		qDebug() << "angleToGoal:" << rad2angle(a) << p3[2];
+		push_log("angleToGoal: " + fromFloat(rad2angle(a)) + " " + fromFloat(p3[2]));
 	}
 }
 

@@ -38,12 +38,13 @@ void draw_line(const ct::Vec3d& v, const ct::Vec3d & col = ct::Vec3d::ones(), do
 	glLineWidth(1);
 }
 
-void draw_cylinder(double R, double H, int cnt = 10, const ct::Vec3d& col = ct::Vec4d::ones())
+void draw_cylinder(double R, double H, int cnt = 10, const ct::Vec4d& col = ct::Vec4d::ones())
 {
 	double z0 = 0;
 	double z1 = H;
 
-	glColor4dv(col.ptr());
+	glColor4dv(col.val);
+	//glColor4d(0.8, 0.4, 0.1, 0.5);
 
 	glBegin(GL_TRIANGLE_STRIP);
 	for(int i = 0; i <= cnt; i++){
@@ -117,10 +118,10 @@ GLView::GLView(QWidget *parent) :
 
 	setMouseTracking(true);
 
-	QGLFormat newFormat = format();
-	newFormat.setSampleBuffers(true);
-	newFormat.setSamples(16);
-	setFormat(newFormat);
+//	QGLFormat newFormat = format();
+//	newFormat.setSampleBuffers(true);
+//	newFormat.setSamples(4);
+//	setFormat(newFormat);
 }
 
 GLView::~GLView()
@@ -228,10 +229,6 @@ void GLView::init()
 	glFrontFace(GL_FRONT);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glEnable(GL_MULTISAMPLE);
-
-
 }
 
 void GLView::draw_net()
@@ -606,7 +603,7 @@ void GLView::glDraw()
 	}
 
 	glEnable(GL_BLEND);
-	draw_cylinder(virtual_xy_edge, 0.3, 16, ct::Vec4d(0.8, 0.4, 0.1, 0.5));
+	draw_cylinder(virtual_xy_edge, 1, 64, ct::Vec4d(0.8, 0.4, 0.1, 0.5));
 	glDisable(GL_BLEND);
 
 	swapBuffers();

@@ -23,6 +23,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
+CONFIG(debug, debug | release){
+    DST = debug
+}else{
+    DST = release
+}
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     glview.cpp \
@@ -54,3 +60,8 @@ win32{
 
 RESOURCES += \
     modeling.qrc
+
+MOC_DIR = tmp/$$DST/moc
+OBJECTS_DIR = tmp/$$DST/obj
+UI_DIR = tmp/$$DST/ui
+RCC_DIR = tmp/$$DST/rcc
