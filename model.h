@@ -265,9 +265,11 @@ private:
 	double m_prev_e;			/// for calculate differential error
 	double m_e_I;				/// for integral error to height. now not use
 
-	ct::Vec3d prev_angles_e;	/// for calculate differential error of angles
-	ct::Vec3d angles_eI;		/// integral error of angles
-	bool m_use_integral;		/// falg for use or not integral error with angles
+	ct::Vec3d m_prev_angles_e;	/// for calculate differential error of angles
+	ct::Vec3d m_angles_eI;		/// integral error of angles
+	bool m_use_integral;		/// flag for use or not integral error with angles
+
+	ct::Vec3d m_prev_goal_e;	/// previous error for go to goal;
 
 	double m_force_1;
 	double m_force_2;

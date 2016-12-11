@@ -244,7 +244,7 @@ bool VObjContainer::open(const std::string &fn)
 
 		obj.openmtl(dir);
 
-		size_t cnt = obj.v.size();
+		int cnt;
 		for(auto it = obj.faces.begin(); it != obj.faces.end(); it++){
 			VObj::Faces & faces = (*it).second;
 
@@ -253,6 +253,7 @@ bool VObjContainer::open(const std::string &fn)
 			for(size_t i = 0; i < faces.fv.size(); i++){
 
 
+				cnt = obj.v.size();
 				std::vector< int >& inds = faces.fv[i];
 				for(size_t j = 0; j < inds.size(); j++){
 					if(inds[j] < 0)

@@ -196,7 +196,7 @@ public:
 		return val;
 	}
 
-	inline int channels() const{
+	inline int size() const{
 		return count;
 	}
 
@@ -377,6 +377,11 @@ inline Vec_<T, count> sqrt(const Vec_<T, count>& v1)
 	return res;
 }
 
+/**
+ * @brief crop_angles
+ * @param v1
+ * @return values in [-M_PI/2, M_PI/2]
+ */
 template<typename T, int count>
 Vec_<T, count> crop_angles(const Vec_<T, count>& v1)
 {
@@ -385,6 +390,17 @@ Vec_<T, count> crop_angles(const Vec_<T, count>& v1)
 		res[i] = atan2(sin(v1.val[i]), cos(v1.val[i]));
 	}
 	return res;
+}
+
+/**
+ * @brief crop_angle
+ * @param value
+ * @return value in [-M_PI/2, M_PI/2]
+ */
+template< typename T >
+inline T crop_angle(T value)
+{
+	return atan2(sin(v1.val[i]), cos(v1.val[i]));
 }
 
 typedef Vec_<float, 3> Vec3f;

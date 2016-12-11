@@ -40,6 +40,7 @@ Model::Model()
 	, m_power(false)
 	, m_track_to_goal_point(false)
 	, m_goal_point(10, 10, 10)
+	, m_radius_goal(0.5)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -61,7 +62,7 @@ Model::Model()
 
 	load_params();
 
-	if(angles_eI.empty())
+	if(m_angles_eI.empty())
 		m_use_integral = true;
 	else
 		m_use_integral = false;
@@ -69,7 +70,7 @@ Model::Model()
 
 Model::~Model()
 {
-	if(!angles_eI.empty())
+	if(!m_angles_eI.empty())
 		save_params();
 }
 
@@ -358,16 +359,16 @@ void Model::calculate_angles()
 
 	Vec3d eI;
 	if(m_use_integral){
-		eI = angles_eI + e;
+		eI = m_angles_eI + e;
 		//eI = crop_angles(eI);
-		angles_eI = eI;
+		m_angles_eI = eI;
 	}else{
-		eI = angles_eI;
+		eI = m_angles_eI;
 	}
 
-	Vec3d de = e - prev_angles_e;
+	Vec3d de = e - m_prev_angles_e;
 	de = crop_angles(de);
-	prev_angles_e = e;
+	m_prev_angles_e = e;
 
 	Vec3d u = e * kp + eI * ki + de * kd;
 
@@ -610,9 +611,9 @@ void Model::load_params()
 	if(!SimpleXML::load_param(config_file, params))
 		return;
 
-	angles_eI[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
-	angles_eI[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
-	angles_eI[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
+	m_angles_eI[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
+	m_angles_eI[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
+	m_angles_eI[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
 }
 
 void Model::save_params()
@@ -620,9 +621,9 @@ void Model::save_params()
 	QMap< QString, QVariant > params, pang, pint;
 
 
-	pint["tangage"] = angles_eI[0];
-	pint["roll"] = angles_eI[1];
-	pint["yaw"] = angles_eI[2];
+	pint["tangage"] = m_angles_eI[0];
+	pint["roll"] = m_angles_eI[1];
+	pint["yaw"] = m_angles_eI[2];
 
 	pang["integral"] = pint;
 
@@ -676,8 +677,29 @@ void Model::calculate_track_to_goal()
 
 		double a = atan2(sina, cosa);		/// angle
 		a = p3[2] > 0 ? a : -a;				/// direction of angle
+		double sign = p3[2] > 0 ? 1 : -1;
 
 		push_log("angleToGoal: " + fromFloat(rad2angle(a)) + " " + fromFloat(p3[2]));
+
+		const double max_angles = angle2rad(30.);
+
+		const double kp = 1;
+		const double kd = 30;
+
+		double e_yaw = a;
+		double de_yaw = e_yaw - m_prev_goal_e[2];
+		de_yaw = atan2(sin(de_yaw), cos(de_yaw));
+		m_prev_goal_e[2] = e_yaw;
+
+		double u = kp * e_yaw + kd * de_yaw;
+		u *= m_dt;
+		u = max(-max_angles, min(max_angles, u));
+		u = atan2(sin(u), cos(u));
+		m_angles_goal[2] -= u;
+
+		push_log("goals: yaw=" + fromFloat(m_angles_goal[2]) + " tangage=" + fromFloat(m_angles_goal[0]) + " roll=" + fromFloat(m_angles_goal[1]));
+
+		m_angles_goal = crop_angles(m_angles_goal);
 	}
 }
 

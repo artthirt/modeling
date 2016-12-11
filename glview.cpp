@@ -118,10 +118,12 @@ GLView::GLView(QWidget *parent) :
 
 	setMouseTracking(true);
 
-//	QGLFormat newFormat = format();
-//	newFormat.setSampleBuffers(true);
-//	newFormat.setSamples(4);
-//	setFormat(newFormat);
+#ifdef _MSC_VER
+	QGLFormat newFormat = format();
+	newFormat.setSampleBuffers(true);
+	newFormat.setSamples(4);
+	setFormat(newFormat);
+#endif
 }
 
 GLView::~GLView()
