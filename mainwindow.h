@@ -89,6 +89,8 @@ private:
 	float m_force;
 	float m_forceGoal;
 
+	double m_max_incline_range;
+
 	void load_xml();
 	void save_xml();
 };

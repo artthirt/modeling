@@ -403,6 +403,12 @@ inline T crop_angle(T value)
 	return atan2(sin(value), cos(value));
 }
 
+template< typename T >
+inline T value2range(T value, T max_range)
+{
+	return std::max(-max_range, std::min(max_range, value));
+}
+
 typedef Vec_<float, 3> Vec3f;
 typedef Vec_<double, 3> Vec3d;
 typedef Vec_<int, 3> Vec3i;

@@ -49,6 +49,11 @@ public:
 	 */
 	const ct::Vec3d &pos() const;
 	/**
+	 * @brief velocity
+	 * @return
+	 */
+	ct::Vec3d velocity() const;
+	/**
 	 * @brief eiler
 	 * eiler matrix of the model rotation
 	 * @return
@@ -224,6 +229,7 @@ public:
 
 private:
 	ct::Vec3d m_pos;
+	ct::Vec3d m_prev_pos;
 	ct::Vec3d m_vel;
 	ct::Vec3d m_angles;
 	ct::Vec3d m_angles_vel;

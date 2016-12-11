@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
   , m_force(0)
   , m_forceGoal(0)
   , m_pressed_force(false)
+  , m_max_incline_range(30)
 {
 	ui->setupUi(this);
 
@@ -27,8 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	load_xml();
 
 	ui->hs_yaw->setValue(ui->widgetView->yaw() / 180. * ui->hs_yaw->maximum());
-	ui->hs_roll->setValue(ui->widgetView->roll() / 180. * ui->hs_roll->maximum());
-	ui->hs_tangage->setValue(ui->widgetView->tangage() / 180. * ui->hs_tangage->maximum());
+	ui->hs_roll->setValue(ui->widgetView->roll() / m_max_incline_range * ui->hs_roll->maximum());
+	ui->hs_tangage->setValue(ui->widgetView->tangage() / m_max_incline_range * ui->hs_tangage->maximum());
 
 	ui->hs_yaw_goal->setValue(ui->widgetView->model().yawGoal() / 180. * ui->hs_yaw_goal->maximum());
 }
@@ -47,12 +48,12 @@ void MainWindow::on_hs_yaw_valueChanged(int value)
 
 void MainWindow::on_hs_tangage_valueChanged(int value)
 {
-	ui->widgetView->set_tangage(180. * value/ui->hs_tangage->maximum());
+	ui->widgetView->set_tangage(m_max_incline_range * value/ui->hs_tangage->maximum());
 }
 
 void MainWindow::on_hs_roll_valueChanged(int value)
 {
-	ui->widgetView->set_roll(180. * value/ui->hs_roll->maximum());
+	ui->widgetView->set_roll(m_max_incline_range * value/ui->hs_roll->maximum());
 }
 
 void MainWindow::on_hs_yaw_goal_valueChanged(int value)
@@ -62,12 +63,12 @@ void MainWindow::on_hs_yaw_goal_valueChanged(int value)
 
 void MainWindow::on_hs_tangage_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setTangageGoal(180. * value/ui->hs_yaw->maximum());
+	ui->widgetView->model().setTangageGoal(m_max_incline_range * value/ui->hs_yaw->maximum());
 }
 
 void MainWindow::on_hs_roll_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setRollGoal(180. * value/ui->hs_yaw->maximum());
+	ui->widgetView->model().setRollGoal(m_max_incline_range * value/ui->hs_yaw->maximum());
 }
 
 void MainWindow::load_xml()
@@ -89,6 +90,9 @@ void MainWindow::load_xml()
 	ui->dsb_height->setValue(params["height"].toFloat());
 	ui->chb_tracking->setChecked(params["tracking"].toBool());
 
+	if(params.contains("incline_range"))
+		m_max_incline_range = params["incline_range"].toDouble();
+
 	ui->widgetView->set_tracking(ui->chb_tracking->isChecked());
 }
 
@@ -105,6 +109,7 @@ void MainWindow::save_xml()
 	params["f4"] = ui->dsb_f4->value();
 	params["height"] = ui->dsb_height->value();
 	params["tracking"] = ui->chb_tracking->isChecked();
+	params["incline_range"] = m_max_incline_range;
 
 	SimpleXML::save_param(config_main, params);
 }

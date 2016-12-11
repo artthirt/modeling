@@ -3,7 +3,7 @@
 CustomSlider::CustomSlider(QWidget *parent)
 	: QSlider(parent)
 	, m_goal_value(0)
-	, m_dtick(1)
+	, m_dtick(2)
 	, m_slider_pressed(false)
 {
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimeout()));

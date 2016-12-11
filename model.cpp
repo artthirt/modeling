@@ -117,6 +117,13 @@ const Vec3d &Model::pos() const
 	return m_pos;
 }
 
+Vec3d Model::velocity() const
+{
+	ct::Vec3d v = m_pos - m_prev_pos;
+	v /= m_dt;
+	return v;
+}
+
 Matd Model::eiler() const
 {
 	return get_eiler_mat4(m_angles);
@@ -533,6 +540,7 @@ void Model::state_model_position(Vec3d &force_direction)
 		}
 	}
 
+	m_prev_pos = m_pos;
 	m_pos += m_vel;
 
 	m_angles += m_angles_vel;
@@ -679,9 +687,8 @@ void Model::calculate_track_to_goal()
 		a = p3[2] > 0 ? a : -a;				/// direction of angle
 		double sign = p3[2] > 0 ? 1 : -1;
 
-		push_log("angleToGoal: " + fromFloat(rad2angle(a)) + " " + fromFloat(p3[2]));
-
-		const double max_angles = angle2rad(30.);
+		const double max_yaw_change = angle2rad(30.);
+		const double max_other_change = angle2rad(10.);
 
 		const double kp = 1;
 		const double kd = 30;
@@ -693,11 +700,42 @@ void Model::calculate_track_to_goal()
 
 		double u = kp * e_yaw + kd * de_yaw;
 		u *= m_dt;
-		u = max(-max_angles, min(max_angles, u));
+		u = max(-max_yaw_change, min(max_yaw_change, u));
 		u = atan2(sin(u), cos(u));
 		m_angles_goal[2] -= u;
 
-		push_log("goals: yaw=" + fromFloat(m_angles_goal[2]) + " tangage=" + fromFloat(m_angles_goal[0]) + " roll=" + fromFloat(m_angles_goal[1]));
+		Vec3d vel = velocity();
+		Vec3d p4 = vel;
+		p4[2] = 0;
+
+		double ta = M_PI/2. - a;
+		double ra = a;
+		if(a < 0)
+			ta = a + M_PI/2;
+
+		Vec3d exy = e;
+		exy[2] = 0;
+
+		if(exy.norm() > m_radius_goal){
+
+			ta = ta * log(1 + exy.norm())/2.;
+			ra = ra * log(1 + exy.norm())/2.;
+
+			ta = value2range(ta, max_other_change);
+			ra = value2range(ra, max_other_change);
+			m_angles_goal[0] = ta;
+			m_angles_goal[1] = ra;
+
+		}else{
+			m_angles_goal[0] = 0;
+			m_angles_goal[1] = 0;
+		}
+
+		push_log("goals: φ=" + fromFloat(m_angles_goal[2]) +
+				" θ=" + fromFloat(m_angles_goal[0]) +
+				" α=" + fromFloat(m_angles_goal[1]) +
+				" gtg=" + fromFloat(rad2angle(a)) +
+				" ta=" + fromFloat(rad2angle(ta)) + " ra=" + fromFloat(rad2angle(ra)));
 
 		m_angles_goal = crop_angles(m_angles_goal);
 	}
