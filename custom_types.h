@@ -400,7 +400,7 @@ Vec_<T, count> crop_angles(const Vec_<T, count>& v1)
 template< typename T >
 inline T crop_angle(T value)
 {
-	return atan2(sin(v1.val[i]), cos(v1.val[i]));
+	return atan2(sin(value), cos(value));
 }
 
 typedef Vec_<float, 3> Vec3f;
