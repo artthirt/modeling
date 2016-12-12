@@ -35,8 +35,6 @@ private slots:
 
 	void on_pb_setGoal_clicked(bool checked);
 
-	void on_pb_height_goal_clicked(bool checked);
-
 	void on_doubleSpinBox_valueChanged(double arg1);
 
 	void on_pb_use_forces_clicked(bool checked);
@@ -82,6 +80,14 @@ private slots:
 	void on_chb_searchHover_clicked(bool checked);
 
 	void on_hs_vert_vel_valueChanged(int value);
+
+	void on_rb_none_height_clicked(bool checked);
+
+	void on_rb_use_go_to_height_clicked(bool checked);
+
+	void on_rb_use_hover_clicked(bool checked);
+
+	void on_chb_useIntegalErrorHeight_clicked(bool checked);
 
 private:
 	Ui::MainWindow *ui;

@@ -13,6 +13,12 @@
 class Model
 {
 public:
+	enum EHeightControl{
+		ENone,
+		EGoToToHeight,
+		EHover
+	};
+
 	Model();
 	~Model();
 	/**
@@ -20,6 +26,7 @@ public:
 	 * main calculation state and control of the model
 	 */
 	void calulcate();
+	void setHeightControl(EHeightControl hc);
 	/**
 	 * @brief initialize
 	 * reset state to zero
@@ -82,11 +89,6 @@ public:
 	bool is_log_exists() const;
 	std::string pop_log();
 	void push_log(const std::string &str);
-	/**
-	 * @brief setSimpleHeightControl
-	 * @param val
-	 */
-	void setSimpleHeightControl(bool val);
 	/**
 	 * @brief setHeightGoal
 	 * @param h
@@ -154,6 +156,11 @@ public:
 	double tangage() const;
 	double yaw() const;
 
+	/// @brief the angles of model
+	double goal_roll() const;
+	double goal_tangage() const;
+	double goal_yaw() const;
+
 	/**
 	 * @brief direction_force
 	 * vector of direction of current force
@@ -170,13 +177,14 @@ public:
 	 * @brief isUseInegralError
 	 * @return
 	 */
-	bool isUseInegralError() const;
+	bool isUseInegralErrorAngles() const;
 	/**
 	 * @brief setUseIntegralError
 	 * use integral error for equalize angles of the model
 	 * @param v
 	 */
-	void setUseIntegralError(bool v);
+	void setUseIntegralErrorAngles(bool v);
+	void setUseIntegralErrorHeight(bool v);
 	/**
 	 * @brief setPower
 	 * power on/off model calculation
@@ -245,7 +253,7 @@ private:
 
 	std::deque< std::string > m_logs;
 
-	bool m_useSimpleHeightControl;
+	EHeightControl m_Eheight_control;
 	double m_heightGoal;
 
 	bool m_useMultipleForces;
@@ -281,14 +289,16 @@ private:
 	void search_hover();
 
 	void simpleHeightControl();
+	void normal_work_simple();
 
 private:
 	pid_control< double, double > m_control_height;
 	pid_control< ct::Vec3d, double > m_control_angles;
 	pid_control< double, double > m_control_vert_vel;
 	pid_control< double, double > m_control_vert_vel2;
+	pid_control< ct::Vec2d, double > m_control_vert_horiz;
 
-	bool m_use_integral;		/// flag for use or not integral error with angles
+	bool m_use_integral_angles;		/// flag for use or not integral error with angles
 	bool m_use_eI_height;
 
 	ct::Vec3d m_prev_goal_e;	/// previous error for go to goal;

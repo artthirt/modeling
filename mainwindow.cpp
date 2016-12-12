@@ -33,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->hs_tangage->setValue(ui->widgetView->tangage() / m_max_incline_range * ui->hs_tangage->maximum());
 
 	ui->hs_yaw_goal->setValue(ui->widgetView->model().yawGoal() / 180. * ui->hs_yaw_goal->maximum());
+
+	ui->hs_vert_vel->setEnabled(false);
+	ui->chb_searchHover->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -91,6 +94,21 @@ void MainWindow::load_xml()
 	ui->dsb_height->setValue(params["height"].toFloat());
 	ui->chb_tracking->setChecked(params["tracking"].toBool());
 
+	ui->pb_use_forces->setChecked(params["use_forces"].toBool());
+	ui->widgetView->model().setUseMultipleForces(ui->pb_use_forces->isChecked());
+
+	int id = params["height_control"].toInt();
+	if(id == 0){
+		ui->rb_none_height->setChecked(true);
+		ui->widgetView->model().setHeightControl(Model::ENone);
+	}else if(id == 1){
+		ui->rb_use_go_to_height->setChecked(true);
+		ui->widgetView->model().setHeightControl(Model::EGoToToHeight);
+	}else{
+		ui->rb_use_hover->setChecked(true);
+		ui->widgetView->model().setHeightControl(Model::EHover);
+	}
+
 	if(params.contains("incline_range"))
 		m_max_incline_range = params["incline_range"].toDouble();
 
@@ -111,6 +129,9 @@ void MainWindow::save_xml()
 	params["height"] = ui->dsb_height->value();
 	params["tracking"] = ui->chb_tracking->isChecked();
 	params["incline_range"] = m_max_incline_range;
+
+	params["use_forces"] = ui->pb_use_forces->isChecked();
+	params["height_control"] = ui->rb_none_height->isChecked()? 0 : ui->rb_use_go_to_height->isChecked()? 1 : 2;
 
 	SimpleXML::save_param(config_main, params);
 }
@@ -152,10 +173,19 @@ void MainWindow::onTimeout()
 	ui->lb_vely->setText(QString::number(ui->widgetView->model().velocity()[1], 'f', 3));
 	ui->lb_velz->setText(QString::number(ui->widgetView->model().velocity()[2], 'f', 3));
 
+	ui->lb_vel->setText("V(norm)=" + QString::number(ui->widgetView->model().velocity().norm(), 'f', 3));
+	ui->lb_goal_a->setText("goals: φ=" + QString::number(ui->widgetView->model().goal_yaw(), 'f', 2) +
+			" θ=" + QString::number(ui->widgetView->model().goal_tangage(), 'f', 2) +
+			" α=" + QString::number(ui->widgetView->model().goal_roll(), 'f', 2));
+
 	if(ui->widgetView->model().found_hover()){
-		ui->lb_found_hover->setStyleSheet("background-color: rgb(0, 200, 0); border-radius: 12px;");
+		ui->lb_found_hover->setStyleSheet("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(137, 255, 133, 255), stop:1 rgba(0, 150, 0, 255));"
+										  "border-radius: 15px;"
+										  "border-color: rgb(60, 60, 60);");
 	}else{
-		ui->lb_found_hover->setStyleSheet("background-color: rgb(200, 0, 0); border-radius: 12px;");
+		ui->lb_found_hover->setStyleSheet("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(255, 137, 133, 255), stop:1 rgba(150, 0, 0, 255));"
+										  "border-radius: 15px;"
+										  "border-color: rgb(60, 60, 60);");
 	}
 }
 
@@ -169,11 +199,6 @@ void MainWindow::on_pb_setGoal_clicked(bool checked)
 	if(checked){
 		m_forceGoal = m_force;
 	}
-}
-
-void MainWindow::on_pb_height_goal_clicked(bool checked)
-{
-	ui->widgetView->setUseHeightGoal(checked);
 }
 
 void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
@@ -266,7 +291,7 @@ void MainWindow::on_pb_generate_route_clicked()
 
 void MainWindow::on_chb_useIntegalError_clicked(bool checked)
 {
-	ui->widgetView->model().setUseIntegralError(checked);
+	ui->widgetView->model().setUseIntegralErrorAngles(checked);
 }
 
 void MainWindow::on_pb_power_clicked(bool checked)
@@ -281,13 +306,42 @@ void MainWindow::on_pb_goToGoal_clicked(bool checked)
 
 void MainWindow::on_chb_searchHover_clicked(bool checked)
 {
+	if(checked){
+		ui->rb_use_hover->setChecked(true);
+	}
 	ui->widgetView->model().setSearchHover(checked);
 }
 
 void MainWindow::on_hs_vert_vel_valueChanged(int value)
 {
-
 	double v = 1.0 * value / ui->hs_vert_vel->maximum();
 	v *= maximum_vert_vel;
 	ui->widgetView->model().setGoalVerticalVelocity(v);
+}
+
+void MainWindow::on_rb_none_height_clicked(bool checked)
+{
+	ui->widgetView->model().setHeightControl(Model::ENone);
+	ui->hs_vert_vel->setEnabled(false);
+	ui->chb_searchHover->setEnabled(false);
+}
+
+void MainWindow::on_rb_use_go_to_height_clicked(bool checked)
+{
+	ui->widgetView->model().setHeightControl(Model::EGoToToHeight);
+	ui->chb_searchHover->setChecked(false);
+	ui->hs_vert_vel->setEnabled(false);
+	ui->chb_searchHover->setEnabled(false);
+}
+
+void MainWindow::on_rb_use_hover_clicked(bool checked)
+{
+	ui->widgetView->model().setHeightControl(Model::EHover);
+	ui->hs_vert_vel->setEnabled(true);
+	ui->chb_searchHover->setEnabled(true);
+}
+
+void MainWindow::on_chb_useIntegalErrorHeight_clicked(bool checked)
+{
+	ui->widgetView->model().setUseIntegralErrorHeight(checked);
 }

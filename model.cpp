@@ -19,8 +19,11 @@ const double attenuation = 0.85f;
 const double coeff_friction = 0.62f;
 /// for weak epsilon weak
 const double eps = 1e-3;
-/// for weak epsilon weak
+/// for hard epsilon weak
 const double eps_hard = 1e-6;
+/// minumum angle for choose state
+const double angle_for_chose = angle2rad(5);
+
 
 const QString config_file("config.model.xml");
 
@@ -33,6 +36,13 @@ string fromFloat(double v)
 	return ss.str();
 }
 
+template< typename T >
+T sigmoid(const T &val)
+{
+	T res = exp(-val);
+	return 1. / (1. + res);
+}
+
 ////////////////////////////////////////////////
 
 enum WORK_MODE{
@@ -41,7 +51,7 @@ enum WORK_MODE{
 };
 
 Model::Model()
-	: m_useSimpleHeightControl(0)
+	: m_Eheight_control(ENone)
 	, m_heightGoal(8)
 	, m_useMultipleForces(false)
 	, m_direct_model(1, 0, 0)
@@ -49,7 +59,7 @@ Model::Model()
 	, m_power(false)
 	, m_track_to_goal_point(false)
 	, m_goal_point(10, 10, 10)
-	, m_radius_goal(0.5)
+	, m_radius_goal(0.1)
 	, m_state(NORMAL)
 	, m_use_eI_height(false)
 	, m_search_hover(false)
@@ -82,30 +92,42 @@ Model::Model()
 	load_params();
 
 	if(m_control_angles.eI().empty())
-		m_use_integral = true;
+		m_use_integral_angles = true;
 	else
-		m_use_integral = false;
+		m_use_integral_angles = false;
 }
 
 Model::~Model()
 {
-	if(!m_control_angles.eI().empty())
-		save_params();
+	save_params();
 }
 
 void Model::calulcate()
 {
-
 	state_model_angles();
 	state_model_position();
 
 	calculate_angles();
-	simpleHeightControl();
 
-	search_hover();
-	calculate_hovering();
+
+	switch (m_Eheight_control) {
+		case EGoToToHeight:
+			simpleHeightControl();
+			break;
+		case EHover:
+			search_hover();
+			calculate_hovering();
+			break;
+		default:
+			break;
+	}
 
 	calculate_track_to_goal();
+}
+
+void Model::setHeightControl(Model::EHeightControl hc)
+{
+	m_Eheight_control = hc;
 }
 
 void Model::initialize()
@@ -194,11 +216,6 @@ void Model::push_log(const string &str)
 	res.erase(res.end() - 1);
 	res += ": " + str;
 	m_logs.push_back(res);
-}
-
-void Model::setSimpleHeightControl(bool val)
-{
-	m_useSimpleHeightControl = val;
 }
 
 void Model::setHeightGoal(double h)
@@ -339,6 +356,22 @@ double Model::yaw() const
 	return rad2angle(atan2(v[1], v[0]));
 }
 
+double Model::goal_roll() const
+{
+	return rad2angle(m_angles_goal[1]);
+}
+
+double Model::goal_tangage() const
+{
+	return rad2angle(m_angles_goal[0]);
+}
+
+double Model::goal_yaw() const
+{
+	return rad2angle(m_angles_goal[2]);
+}
+
+
 Vec3d Model::direction_force() const
 {
 	return m_direction_force;
@@ -349,14 +382,19 @@ Vec3d Model::direct_model() const
 	return m_direct_model;
 }
 
-bool Model::isUseInegralError() const
+bool Model::isUseInegralErrorAngles() const
 {
-	return m_use_integral;
+	return m_use_integral_angles;
 }
 
-void Model::setUseIntegralError(bool v)
+void Model::setUseIntegralErrorAngles(bool v)
 {
-	m_use_integral = v;
+	m_use_integral_angles = v;
+}
+
+void Model::setUseIntegralErrorHeight(bool v)
+{
+	m_use_eI_height = v;
 }
 
 void Model::setPower(bool v)
@@ -383,7 +421,7 @@ void Model::calculate_angles()
 	const double kd = 70;
 
 	m_control_angles.setKpid(kp, kd, ki);
-	m_control_angles.use_eI = m_use_integral;
+	m_control_angles.use_eI = m_use_integral_angles;
 	m_control_angles.setGoal(m_angles_goal);
 	m_control_angles.crop_value = &crop_angles;
 
@@ -458,8 +496,6 @@ void Model::calculate_hovering()
 		}
 		normal_work();
 	}else{
-		const double angle_for_chose = angle2rad(5);
-
 		if(abs(tangage()) < angle_for_chose){
 			m_state = NORMAL;
 		}
@@ -606,6 +642,8 @@ void Model::state_model_angles()
 
 void Model::state_model_position()
 {
+	m_prev_pos = m_pos;
+
 	Vec3d vel(0, 0, 1);
 	Vec3d direct_model(1, 0, 0);
 	Vec3d roll_model(0, 1, 0);
@@ -658,7 +696,6 @@ void Model::state_model_position()
 		}
 	}
 
-	m_prev_pos = m_pos;
 	m_pos += m_vel;
 
 	m_angles += m_angles_vel;
@@ -684,37 +721,49 @@ void Model::state_model_position()
 
 void Model::simpleHeightControl()
 {
-	if(!m_useSimpleHeightControl)
-		return;
+	if(m_state == ROTATE_TO_HOVER){
+		/// rotate to vertical
+		if(abs(tangage() < angle_for_chose)){
+			m_state = NORMAL;
+		}
+	}else if(m_state == NORMAL){
+		if(m_direction_force[2] < 0){
+			push_log("very bad. quad headfirst");
+			m_state = ROTATE_TO_HOVER;
+			setTangageGoal(0);
+			return;
+		}
 
-	if(m_direction_force[2] < 0){
-		push_log("very bad. quad headfirst");
-		return;
+		normal_work_simple();
 	}
 
+}
+
+void Model::normal_work_simple()
+{
 //	double e = m_heightGoal - m_pos[2];
 //	Vec3f vec_force = normal * m_force;
 //	float force = vec_force[2];
 
 	const double kp = 1.1;
 	const double kd = 20.0;
-	const double ki = 0.005;
+	const double ki = 0.1;
 
 	m_control_height.setGoal(m_heightGoal);
 	m_control_height.setKpid(kp, kd, ki);
+	m_control_height.set_use_eI(m_use_eI_height);
 
 //	m_e_I += e;
 
 //	double de = e - m_prev_e;
 //	m_prev_e = e;
 
-	double u = m_control_height.get(m_pos[2]) + gravity;
+	double u = m_control_height.get(m_pos[2]);
 
 	u = std::max(0., std::min(m_max_force, u));
 
-	double force = m_mass * u;
-
 	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	double force = m_mass * u;
 
 	if(part_f > 0){
 		double pf1 = m_force_1 / part_f;
@@ -744,7 +793,8 @@ void Model::load_params()
 	m_control_angles.eI()[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
 	m_control_angles.eI()[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
 
-	m_control_vert_vel2.eI() = params["height"].toMap()["integral"].toDouble();
+	m_control_vert_vel2.eI() = params["height"].toMap()["integral_vel"].toDouble();
+	m_control_height.eI() = params["height"].toMap()["integral_goal"].toDouble();
 }
 
 void Model::save_params()
@@ -761,7 +811,8 @@ void Model::save_params()
 	params["angles"] = pang;
 
 	pint.clear();
-	pint["integral"] = m_control_vert_vel2.eI();
+	pint["integral_vel"] = m_control_vert_vel2.eI();
+	pint["integral_goal"] = m_control_height.eI();
 	params["height"] = pint;
 
 	SimpleXML::save_param(config_file, params);
@@ -793,8 +844,11 @@ void Model::calculate_track_to_goal()
 		return;
 
 	Vec3d e = m_goal_point - m_pos;
-	if(e.norm() < m_radius_goal)
+	if(e.norm() < m_radius_goal && velocity().norm() * m_dt < eps)
 		return;
+
+	/// set goal height
+	setHeightGoal(m_goal_point[2]);
 
 	/// get angle between goal and direction of model
 
@@ -817,23 +871,22 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(10.);
 
-		const double kp = 0.9;
-		const double kd = 60;
+		const double kp_y = 1;
+		const double kd_y = 10;
+
+		const double kp_tr = 0.5;
+		const double kd_tr = 10;
 
 		double e_yaw = a;
 		double de_yaw = e_yaw - m_prev_goal_e[2];
 		de_yaw = atan2(sin(de_yaw), cos(de_yaw));
 		m_prev_goal_e[2] = e_yaw;
 
-		double u = kp * e_yaw + kd * de_yaw;
+		double u = kp_y * e_yaw + kd_y * de_yaw;
 		u *= m_dt;
 		u = max(-max_yaw_change, min(max_yaw_change, u));
 		u = atan2(sin(u), cos(u));
 		m_angles_goal[2] -= u;
-
-		Vec3d vel = velocity();
-		Vec3d p4 = vel;
-		p4[2] = 0;
 
 		double ta = M_PI/2. - a;
 		double ra = a;
@@ -842,25 +895,26 @@ void Model::calculate_track_to_goal()
 
 		Vec3d exy = e;
 		exy[2] = 0;
+		Vec3d velxy = velocity();
+		velxy[2] = 0;
 
 		if(exy.norm() > m_radius_goal){
+			double n = (exy.norm() / (50 * m_radius_goal));
 
-			ta = ta * log(1 + (exy.norm()));
-			ra = ra * log(1 + (exy.norm()));
+			ta /= M_PI, ra /= M_PI;
 
 			double dta = ta - m_prev_goal_e[0];
 			double dra = ra - m_prev_goal_e[1];
-
 			m_prev_goal_e[0] = ta;
 			m_prev_goal_e[1] = ra;
 
-			double uta = kp * ta + kd * dta;
-			double ura = kp * ra + kd * dra;
+			double uta = kp_tr * ta + kd_tr * dta;
+			double ura = kp_tr * ra + kd_tr * dra;
 
-			uta = value2range(uta, max_other_change);
-			ura = value2range(ura, max_other_change);
-			m_angles_goal[0] = uta;
-			m_angles_goal[1] = ura;
+			m_angles_goal[0] = uta * n;
+			m_angles_goal[0] = value2range(m_angles_goal[0], max_other_change);
+			m_angles_goal[1] = ura * n;
+			m_angles_goal[1] = value2range(m_angles_goal[1], max_other_change);
 
 		}else{
 			m_angles_goal[0] = 0;
@@ -870,8 +924,7 @@ void Model::calculate_track_to_goal()
 		push_log("goals: φ=" + fromFloat(m_angles_goal[2]) +
 				" θ=" + fromFloat(m_angles_goal[0]) +
 				" α=" + fromFloat(m_angles_goal[1]) +
-				" gtg=" + fromFloat(rad2angle(a)) +
-				" ta=" + fromFloat(rad2angle(ta)) + " ra=" + fromFloat(rad2angle(ra)));
+				" gtg=" + fromFloat(rad2angle(a)));
 
 		m_angles_goal = crop_angles(m_angles_goal);
 	}

@@ -185,11 +185,6 @@ void GLView::set_force(float f)
 	set_update();
 }
 
-void GLView::setUseHeightGoal(bool val)
-{
-	m_model.setSimpleHeightControl(val);
-}
-
 void GLView::setHeightGoal(float h)
 {
 	m_model.setHeightGoal(h);

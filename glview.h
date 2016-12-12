@@ -34,7 +34,6 @@ public:
 
 	void set_force(float f);
 
-	void setUseHeightGoal(bool val);
 	void setHeightGoal(float h);
 
 	void set_tracking(bool v);

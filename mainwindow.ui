@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1091</width>
-    <height>919</height>
+    <width>1267</width>
+    <height>1124</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1091</width>
+     <width>1267</width>
      <height>21</height>
     </rect>
    </property>
@@ -103,6 +103,118 @@
        <property name="topMargin">
         <number>0</number>
        </property>
+       <item row="3" column="0">
+        <layout class="QGridLayout" name="gridLayout_5">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item row="1" column="2">
+          <widget class="Line" name="line_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="Line" name="line_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="Line" name="line_6">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="lb_posy">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Pos(x)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>vel(y)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="lb_posz">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QLabel" name="label_24">
+           <property name="text">
+            <string>vel(z)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_20">
+           <property name="text">
+            <string>vel(x)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Pos(y)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLabel" name="lb_vely">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="lb_velx">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>Pos(z)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QLabel" name="lb_velz">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="lb_posx">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
        <item row="2" column="0">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
@@ -357,23 +469,6 @@
          <property name="topMargin">
           <number>0</number>
          </property>
-         <item row="4" column="2">
-          <widget class="QPushButton" name="pb_rese_angles">
-           <property name="text">
-            <string>Reset</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="4">
-          <widget class="QPushButton" name="pb_height_goal">
-           <property name="text">
-            <string>Set Height Goal</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
           <widget class="QCheckBox" name="chb_tracking">
            <property name="text">
@@ -405,24 +500,6 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="4">
-          <widget class="QPushButton" name="pb_goToGoal">
-           <property name="text">
-            <string>Go to Goal</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QCheckBox" name="chb_useIntegalError">
-           <property name="text">
-            <string>Use integral 
-error for angles</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="4">
           <widget class="QPushButton" name="pb_power">
            <property name="font">
@@ -442,15 +519,15 @@ error for angles</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
-          <widget class="QCheckBox" name="chb_searchHover">
+         <item row="6" column="1">
+          <widget class="QCheckBox" name="chb_useIntegalError">
            <property name="text">
-            <string>search hover
-(default height=1 m)</string>
+            <string>Use integral 
+error for angles</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
+         <item row="4" column="2">
           <widget class="QLabel" name="lb_found_hover">
            <property name="maximumSize">
             <size>
@@ -459,7 +536,7 @@ error for angles</string>
             </size>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: rgb(200, 200, 200);
+            <string notr="true">background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(255, 255, 255, 255), stop:1 rgba(150, 150, 150, 255));
 border-radius: 12px;
 border-color: rgb(60, 60, 60);</string>
            </property>
@@ -468,115 +545,107 @@ border-color: rgb(60, 60, 60);</string>
            </property>
           </widget>
          </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
-        <layout class="QGridLayout" name="gridLayout_5">
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <item row="1" column="1">
-          <widget class="QLabel" name="lb_posy">
+         <item row="4" column="1">
+          <widget class="QCheckBox" name="chb_searchHover">
            <property name="text">
-            <string>0</string>
+            <string>search hover
+(default height=1 m)</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Pos(x)</string>
+         <item row="8" column="4">
+          <widget class="QGroupBox" name="groupBox_3">
+           <property name="title">
+            <string>Height control</string>
            </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_22">
-           <property name="text">
-            <string>vel(y)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="lb_posz">
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QLabel" name="label_24">
-           <property name="text">
-            <string>vel(z)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="4">
-          <widget class="QLabel" name="lb_velx">
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_17">
-           <property name="text">
-            <string>Pos(z)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lb_vely">
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>Pos(y)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QLabel" name="label_20">
-           <property name="text">
-            <string>vel(x)</string>
-           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QRadioButton" name="rb_none_height">
+              <property name="text">
+               <string>None</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="rb_use_go_to_height">
+              <property name="text">
+               <string>Go to height</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="rb_use_hover">
+              <property name="text">
+               <string>Hover</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item row="2" column="4">
-          <widget class="QLabel" name="lb_velz">
+          <widget class="QPushButton" name="pb_goToGoal">
            <property name="text">
-            <string>0</string>
+            <string>Go to Goal</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="lb_posx">
+         <item row="4" column="4">
+          <widget class="QPushButton" name="pb_rese_angles">
            <property name="text">
-            <string>0</string>
+            <string>Reset</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="Line" name="line_4">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="8" column="1">
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QCheckBox" name="chb_useIntegalErrorHeight">
+             <property name="text">
+              <string>Use integral 
+error for height</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="lb_vel">
+           <property name="text">
+            <string/>
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="Line" name="line_5">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="Line" name="line_6">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item>
+          <widget class="QLabel" name="lb_goal_a">
+           <property name="text">
+            <string/>
            </property>
           </widget>
          </item>
@@ -591,61 +660,188 @@ border-color: rgb(60, 60, 60);</string>
        </property>
        <widget class="QWidget" name="page">
         <layout class="QGridLayout" name="gridLayout_10">
-         <item row="6" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item row="2" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <property name="topMargin">
+            <number>10</number>
+           </property>
            <item>
-            <widget class="CustomSlider" name="hs_tangage_goal">
-             <property name="minimum">
-              <number>-99</number>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <property name="topMargin">
+              <number>10</number>
              </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
+             <item>
+              <widget class="QLabel" name="label_7">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Goal angles</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="JoystickEmulate" name="widget_joystick" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>90</width>
+                 <height>90</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>90</width>
+                 <height>90</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QLabel" name="lb_tangage">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QLabel" name="label_9">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Yaw</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <widget class="QSlider" name="hs_yaw_goal">
+                 <property name="minimum">
+                  <number>-99</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lb_yaw">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Tangage</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <widget class="CustomSlider" name="hs_tangage_goal">
+                 <property name="minimum">
+                  <number>-99</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lb_tangage">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_10">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Roll</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <item>
+                <widget class="CustomSlider" name="hs_roll_goal">
+                 <property name="minimum">
+                  <number>-99</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lb_roll">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </item>
           </layout>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Yaw</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Goal angles</string>
-           </property>
-          </widget>
          </item>
          <item row="5" column="0">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="label_13">
            <property name="font">
             <font>
              <weight>75</weight>
@@ -653,54 +849,11 @@ border-color: rgb(60, 60, 60);</string>
             </font>
            </property>
            <property name="text">
-            <string>Tangage</string>
+            <string>Vertical velocity</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <item>
-            <widget class="QSlider" name="hs_yaw_goal">
-             <property name="minimum">
-              <number>-99</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="lb_yaw">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <widget class="JoystickEmulate" name="widget_joystick" native="true">
-           <property name="minimumSize">
-            <size>
-             <width>90</width>
-             <height>90</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>90</width>
-             <height>90</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="11" column="0">
+         <item row="8" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout_8">
            <item>
             <widget class="CustomSlider" name="hs_vert_vel">
@@ -726,59 +879,6 @@ border-color: rgb(60, 60, 60);</string>
             </widget>
            </item>
           </layout>
-         </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_10">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Roll</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_7">
-           <item>
-            <widget class="CustomSlider" name="hs_roll_goal">
-             <property name="minimum">
-              <number>-99</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="lb_roll">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="10" column="0">
-          <widget class="QLabel" name="label_13">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Vertical velocity</string>
-           </property>
-          </widget>
          </item>
         </layout>
        </widget>
