@@ -5,6 +5,7 @@
 
 const float maximum_force = 150.f;
 const float d_force = maximum_force/1000.f;
+const double maximum_vert_vel = 3;
 
 const QString config_main("config.main.xml");
 
@@ -121,12 +122,6 @@ void MainWindow::on_pushButton_clicked()
 	ui->hs_yaw->setValue(0);
 }
 
-void MainWindow::on_vs_force_valueChanged(int value)
-{
-	m_force = maximum_force * value / ui->vs_force->maximum();
-	ui->widgetView->set_force(m_force);
-}
-
 void MainWindow::on_vs_force_sliderPressed()
 {
 	m_pressed_force = true;
@@ -139,28 +134,29 @@ void MainWindow::on_vs_force_sliderReleased()
 
 void MainWindow::onTimeout()
 {
-	if(ui->pb_setGoal->isChecked()){
-		if(!m_pressed_force && std::abs(m_force * m_forceGoal) > 1.5 * d_force){
-			float delta = m_force - m_forceGoal;
-			float signDelta = delta > 0 ? -1 : 1;
-			m_force += d_force * signDelta;
-
-			ui->widgetView->set_force(m_force);
-
-			ui->vs_force->setValue(m_force / maximum_force * ui->vs_force->maximum());
-		}
-	}
-	if(m_force < 0)
-		m_force = 0;
-
 	ui->lb_yaw->setText(QString::number(ui->widgetView->model().yaw(), 'f', 2));
 	ui->lb_roll->setText(QString::number(ui->widgetView->model().roll(), 'f', 2));
 	ui->lb_tangage->setText(QString::number(ui->widgetView->model().tangage(), 'f', 2));
+	ui->lb_vertVel->setText(QString::number(ui->widgetView->model().vertVel(), 'f', 2));
 
 	ui->lb_f1->setText(QString::number(ui->widgetView->model().force(1), 'f', 3));
 	ui->lb_f2->setText(QString::number(ui->widgetView->model().force(2), 'f', 3));
 	ui->lb_f3->setText(QString::number(ui->widgetView->model().force(3), 'f', 3));
 	ui->lb_f4->setText(QString::number(ui->widgetView->model().force(4), 'f', 3));
+
+	ui->lb_posx->setText(QString::number(ui->widgetView->model().pos()[0], 'f', 3));
+	ui->lb_posy->setText(QString::number(ui->widgetView->model().pos()[1], 'f', 3));
+	ui->lb_posz->setText(QString::number(ui->widgetView->model().pos()[2], 'f', 3));
+
+	ui->lb_velx->setText(QString::number(ui->widgetView->model().velocity()[0], 'f', 3));
+	ui->lb_vely->setText(QString::number(ui->widgetView->model().velocity()[1], 'f', 3));
+	ui->lb_velz->setText(QString::number(ui->widgetView->model().velocity()[2], 'f', 3));
+
+	if(ui->widgetView->model().found_hover()){
+		ui->lb_found_hover->setStyleSheet("background-color: rgb(0, 200, 0); border-radius: 12px;");
+	}else{
+		ui->lb_found_hover->setStyleSheet("background-color: rgb(200, 0, 0); border-radius: 12px;");
+	}
 }
 
 void MainWindow::onPushLog(const QString &val)
@@ -281,4 +277,17 @@ void MainWindow::on_pb_power_clicked(bool checked)
 void MainWindow::on_pb_goToGoal_clicked(bool checked)
 {
 	ui->widgetView->model().setTrackToGoalPoint(checked);
+}
+
+void MainWindow::on_chb_searchHover_clicked(bool checked)
+{
+	ui->widgetView->model().setSearchHover(checked);
+}
+
+void MainWindow::on_hs_vert_vel_valueChanged(int value)
+{
+
+	double v = 1.0 * value / ui->hs_vert_vel->maximum();
+	v *= maximum_vert_vel;
+	ui->widgetView->model().setGoalVerticalVelocity(v);
 }

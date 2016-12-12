@@ -8,6 +8,7 @@
 #include "custom_types.h"
 
 #include "vobjcontainer.h"
+#include "pid_control.h"
 
 class Model
 {
@@ -227,6 +228,11 @@ public:
 	 */
 	void setRadiusGoal(double v);
 
+	void setSearchHover(bool v);
+	void setGoalVerticalVelocity(double v);
+	double vertVel() const;
+	bool found_hover() const;
+
 private:
 	ct::Vec3d m_pos;
 	ct::Vec3d m_prev_pos;
@@ -261,19 +267,29 @@ private:
 	 */
 	ct::Vec3d m_angles_goal;
 
+	int m_state;
+	bool m_search_hover;
+	bool m_found_hover;
+	double m_goal_vert_vel;
+
 	void calculate_angles();
 	void state_model_angles();
-	void state_model_position(ct::Vec3d &force_direction);
+	void state_model_position();
 
-	void simpleHeightControl(const ct::Vec3d& normal);
+	void calculate_hovering();
+	void normal_work();
+	void search_hover();
+
+	void simpleHeightControl();
 
 private:
-	double m_prev_e;			/// for calculate differential error
-	double m_e_I;				/// for integral error to height. now not use
+	pid_control< double, double > m_control_height;
+	pid_control< ct::Vec3d, double > m_control_angles;
+	pid_control< double, double > m_control_vert_vel;
+	pid_control< double, double > m_control_vert_vel2;
 
-	ct::Vec3d m_prev_angles_e;	/// for calculate differential error of angles
-	ct::Vec3d m_angles_eI;		/// integral error of angles
 	bool m_use_integral;		/// flag for use or not integral error with angles
+	bool m_use_eI_height;
 
 	ct::Vec3d m_prev_goal_e;	/// previous error for go to goal;
 
@@ -281,6 +297,7 @@ private:
 	double m_force_2;
 	double m_force_3;
 	double m_force_4;
+	double m_force_hover;
 	double m_arm;
 
 	ct::Vec3d m_goal_point;

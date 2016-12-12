@@ -64,10 +64,8 @@ public:
 	}
 
 	Vec_(T a0){
-		if(count < 1)
-			return;
-		val[0] = a0;
-		std::fill((char*)val + sizeof(T), (char*)val + sizeof(val), 0);
+		for(int i = 0; i < count; i++)
+			val[i] = a0;
 	}
 	Vec_(T a0, T a1){
 		if(count < 2)

@@ -17,6 +17,10 @@ const double attenuation = 0.85f;
 
 /// coefficient friction of oac-tree (for example)
 const double coeff_friction = 0.62f;
+/// for weak epsilon weak
+const double eps = 1e-3;
+/// for weak epsilon weak
+const double eps_hard = 1e-6;
 
 const QString config_file("config.model.xml");
 
@@ -31,6 +35,11 @@ string fromFloat(double v)
 
 ////////////////////////////////////////////////
 
+enum WORK_MODE{
+	NORMAL,					/// normal mode
+	ROTATE_TO_HOVER			/// if got to ground
+};
+
 Model::Model()
 	: m_useSimpleHeightControl(0)
 	, m_heightGoal(8)
@@ -41,6 +50,11 @@ Model::Model()
 	, m_track_to_goal_point(false)
 	, m_goal_point(10, 10, 10)
 	, m_radius_goal(0.5)
+	, m_state(NORMAL)
+	, m_use_eI_height(false)
+	, m_search_hover(false)
+	, m_found_hover(false)
+	, m_goal_vert_vel(0)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -51,8 +65,11 @@ Model::Model()
 	m_force = 0;
 	m_max_force = 15.;
 
-	m_prev_e = 0;
-	m_e_I = 0;
+//	m_prev_e = 0;
+//	m_e_I = 0;
+
+//	m_eI_height = 0;
+//	m_prev_e_height = 0;
 
 	m_force_1 = 0;
 	m_force_2 = 0;
@@ -60,9 +77,11 @@ Model::Model()
 	m_force_4 = 0;
 	m_arm = 0.2f;
 
+	m_force_hover = 0;
+
 	load_params();
 
-	if(m_angles_eI.empty())
+	if(m_control_angles.eI().empty())
 		m_use_integral = true;
 	else
 		m_use_integral = false;
@@ -70,19 +89,21 @@ Model::Model()
 
 Model::~Model()
 {
-	if(!m_angles_eI.empty())
+	if(!m_control_angles.eI().empty())
 		save_params();
 }
 
 void Model::calulcate()
 {
-	Vec3d force_direction;
 
 	state_model_angles();
-	state_model_position(force_direction);
+	state_model_position();
 
 	calculate_angles();
-	simpleHeightControl(force_direction);
+	simpleHeightControl();
+
+	search_hover();
+	calculate_hovering();
 
 	calculate_track_to_goal();
 }
@@ -93,8 +114,7 @@ void Model::initialize()
 	m_pos = Vec3d();
 	m_angles = Vec3d();
 	m_angles_vel = Vec3d();
-	m_prev_e = 0;
-	m_e_I = 0;
+	m_control_angles.reset();
 }
 
 bool Model::open(const string &fn)
@@ -357,28 +377,17 @@ void Model::calculate_angles()
 	/// [0] - tangage
 	/// [1] - roll
 	/// [2] - yaw
-	ct::Vec3d e = m_angles_goal - m_angles;
-	e = crop_angles(e);
 
 	const double kp = 30;
 	const double ki = 0.7;
 	const double kd = 70;
 
-	Vec3d eI;
-	if(m_use_integral){
-		eI = m_angles_eI + e;
-		//eI = crop_angles(eI);
-		m_angles_eI = eI;
-	}else{
-		eI = m_angles_eI;
-	}
+	m_control_angles.setKpid(kp, kd, ki);
+	m_control_angles.use_eI = m_use_integral;
+	m_control_angles.setGoal(m_angles_goal);
+	m_control_angles.crop_value = &crop_angles;
 
-	Vec3d de = e - m_prev_angles_e;
-	de = crop_angles(de);
-	m_prev_angles_e = e;
-
-	Vec3d u = e * kp + eI * ki + de * kd;
-
+	Vec3d u = m_control_angles.get(m_angles);
 	//u = sign(u) * (u * u);
 	u *= m_mass * m_dt;
 
@@ -438,6 +447,117 @@ void Model::calculate_angles()
 
 }
 
+void Model::calculate_hovering()
+{
+	if(m_state == NORMAL){
+
+		if(m_direction_force[2] < 0){
+			m_state = ROTATE_TO_HOVER;
+			setTangageGoal(0);
+			return;
+		}
+		normal_work();
+	}else{
+		const double angle_for_chose = angle2rad(5);
+
+		if(abs(tangage()) < angle_for_chose){
+			m_state = NORMAL;
+		}
+	}
+}
+
+void Model::normal_work()
+{
+	const double kp = 1;
+	const double ki = 0.1;
+	const double kd = 1;
+
+	double force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+
+	if(force < eps && !m_found_hover)
+		return;
+
+	if(m_found_hover && force < eps){
+		force = m_force_hover;
+	}
+
+	double pf1 = m_force_1 / force;
+	double pf2 = m_force_2 / force;
+	double pf3 = m_force_3 / force;
+	double pf4 = m_force_4 / force;
+
+	Vec3d v = velocity();
+
+	//double e = m_pos[2] - m_heightGoal;
+	m_control_vert_vel2.setGoal(m_goal_vert_vel);
+	m_control_vert_vel2.setKpid(kp, kd, ki);
+	m_control_vert_vel2.set_use_eI(m_use_eI_height);
+
+	double u = m_control_vert_vel2.get(v[2]);//kp * e + ki * eI + kd * de;
+
+	u = value2range(u, m_max_force);
+
+	force += u;
+
+	force = value2range(force, m_max_force);
+
+	m_force_1 = pf1 * force;
+	m_force_2 = pf2 * force;
+	m_force_3 = pf3 * force;
+	m_force_4 = pf4 * force;
+}
+
+void Model::search_hover()
+{
+	if(!m_search_hover)
+		return;
+
+	m_goal_vert_vel = 0;
+
+	Vec3d v = velocity();
+
+	const double default_height = 1;
+	static double add_force = 0.1;
+
+	double e = default_height - m_pos[2] + 0 - v[2];
+
+	push_log("error=" + fromFloat(e));
+
+	if(abs(e) < eps_hard){
+		m_found_hover = true;
+
+		m_force_hover = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	}
+
+	if(!m_found_hover){
+
+		const double kp = 1;
+		const double kd = 1;
+
+		m_control_vert_vel.setKpid(kp, kd, 0);
+		m_control_vert_vel.setGoal(default_height);
+		double u = m_control_vert_vel.get(m_pos[2]);
+
+		m_goal_vert_vel = u;
+		m_goal_vert_vel = value2range(m_goal_vert_vel, add_force);
+
+		if(m_pos[2] < default_height && v[2] <=0){
+			m_force_1 += add_force;
+			m_force_2 += add_force;
+			m_force_3 += add_force;
+			m_force_4 += add_force;
+			add_force += 0.001;
+		}
+		if(m_pos[2] > default_height && v[2] >= 0){
+			m_force_1 -= add_force;
+			m_force_2 -= add_force;
+			m_force_3 -= add_force;
+			m_force_4 -= add_force;
+			add_force /= 2;
+		}
+	}
+}
+
 void Model::state_model_angles()
 {
 	/// ************** if not power then not change angles
@@ -484,7 +604,7 @@ void Model::state_model_angles()
 	m_force = coeff_f1 * m_force_1 + coeff_f2 * m_force_2 + coeff_f3 * m_force_3 + coeff_f4 * m_force_4;
 }
 
-void Model::state_model_position(Vec3d &force_direction)
+void Model::state_model_position()
 {
 	Vec3d vel(0, 0, 1);
 	Vec3d direct_model(1, 0, 0);
@@ -501,8 +621,6 @@ void Model::state_model_position(Vec3d &force_direction)
 
 	vel = mv.toVec<3>();
 	m_direction_force = vel;
-
-	force_direction = vel;
 
 	/// get direct model
 	mv = m * direct_model;
@@ -564,17 +682,17 @@ void Model::state_model_position(Vec3d &force_direction)
 	}
 }
 
-void Model::simpleHeightControl(const Vec3d &normal)
+void Model::simpleHeightControl()
 {
 	if(!m_useSimpleHeightControl)
 		return;
 
-	if(normal[2] < 0){
+	if(m_direction_force[2] < 0){
 		push_log("very bad. quad headfirst");
 		return;
 	}
 
-	double e = m_heightGoal - m_pos[2];
+//	double e = m_heightGoal - m_pos[2];
 //	Vec3f vec_force = normal * m_force;
 //	float force = vec_force[2];
 
@@ -582,12 +700,15 @@ void Model::simpleHeightControl(const Vec3d &normal)
 	const double kd = 20.0;
 	const double ki = 0.005;
 
-	m_e_I += e;
+	m_control_height.setGoal(m_heightGoal);
+	m_control_height.setKpid(kp, kd, ki);
 
-	double de = e - m_prev_e;
-	m_prev_e = e;
+//	m_e_I += e;
 
-	double u = kp * e + gravity + kd * de;
+//	double de = e - m_prev_e;
+//	m_prev_e = e;
+
+	double u = m_control_height.get(m_pos[2]) + gravity;
 
 	u = std::max(0., std::min(m_max_force, u));
 
@@ -619,9 +740,11 @@ void Model::load_params()
 	if(!SimpleXML::load_param(config_file, params))
 		return;
 
-	m_angles_eI[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
-	m_angles_eI[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
-	m_angles_eI[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
+	m_control_angles.eI()[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
+	m_control_angles.eI()[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
+	m_control_angles.eI()[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
+
+	m_control_vert_vel2.eI() = params["height"].toMap()["integral"].toDouble();
 }
 
 void Model::save_params()
@@ -629,13 +752,17 @@ void Model::save_params()
 	QMap< QString, QVariant > params, pang, pint;
 
 
-	pint["tangage"] = m_angles_eI[0];
-	pint["roll"] = m_angles_eI[1];
-	pint["yaw"] = m_angles_eI[2];
+	pint["tangage"]		= m_control_angles.eI()[0];
+	pint["roll"]		= m_control_angles.eI()[1];
+	pint["yaw"]			= m_control_angles.eI()[2];
 
 	pang["integral"] = pint;
 
 	params["angles"] = pang;
+
+	pint.clear();
+	pint["integral"] = m_control_vert_vel2.eI();
+	params["height"] = pint;
 
 	SimpleXML::save_param(config_file, params);
 }
@@ -758,4 +885,25 @@ double Model::radius_goal() const
 void Model::setRadiusGoal(double v)
 {
 	m_radius_goal = v;
+}
+
+void Model::setSearchHover(bool v)
+{
+	m_use_eI_height = v;
+	m_search_hover = v;
+}
+
+void Model::setGoalVerticalVelocity(double v)
+{
+	m_goal_vert_vel = v;
+}
+
+double Model::vertVel() const
+{
+	return velocity()[2];
+}
+
+bool Model::found_hover() const
+{
+	return m_found_hover;
 }

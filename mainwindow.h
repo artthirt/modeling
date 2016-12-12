@@ -25,8 +25,6 @@ private slots:
 
 	void on_pushButton_clicked();
 
-	void on_vs_force_valueChanged(int value);
-
 	void on_vs_force_sliderPressed();
 
 	void on_vs_force_sliderReleased();
@@ -80,6 +78,10 @@ private slots:
 	void on_pb_power_clicked(bool checked);
 
 	void on_pb_goToGoal_clicked(bool checked);
+
+	void on_chb_searchHover_clicked(bool checked);
+
+	void on_hs_vert_vel_valueChanged(int value);
 
 private:
 	Ui::MainWindow *ui;

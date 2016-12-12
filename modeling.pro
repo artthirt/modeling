@@ -47,7 +47,8 @@ HEADERS  += mainwindow.h \
     simple_xml.hpp \
     customslider.h \
     joystickemulate.h \
-    modelroute.h
+    modelroute.h \
+    pid_control.h
 
 FORMS    += mainwindow.ui \
     glview.ui
