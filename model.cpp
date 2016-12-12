@@ -888,10 +888,8 @@ void Model::calculate_track_to_goal()
 		u = atan2(sin(u), cos(u));
 		m_angles_goal[2] -= u;
 
-		double ta = M_PI/2. - a;
-		double ra = a;
-		if(a < 0)
-			ta = a + M_PI/2;
+		double ta = cos(a);
+		double ra = sin(a);
 
 		Vec3d exy = e;
 		exy[2] = 0;
