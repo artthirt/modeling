@@ -111,7 +111,6 @@ void Model::calulcate()
 
 	calculate_angles();
 
-
 	switch (m_Eheight_control) {
 		case EGoToToHeight:
 			simpleHeightControl();
@@ -125,6 +124,15 @@ void Model::calulcate()
 	}
 
 	calculate_track_to_goal();
+
+	{
+		const size_t max_track_points = 5000;
+
+		while(m_track_points.size() > max_track_points)
+			m_track_points.pop_back();
+
+		m_track_points.push_front(m_pos);
+	}
 }
 
 void Model::setHeightControl(Model::EHeightControl hc)
@@ -139,6 +147,7 @@ void Model::initialize()
 	m_angles = Vec3d();
 	m_angles_vel = Vec3d();
 	m_control_angles.reset();
+	m_track_points.clear();
 }
 
 bool Model::open(const string &fn)
@@ -316,6 +325,8 @@ void Model::reset_angles()
 	m_force_4 = 0;
 
 	m_pos = Vec3d::zeros();
+
+	m_track_points.clear();
 }
 
 void Model::setYaw(double v)
@@ -418,9 +429,9 @@ void Model::calculate_angles()
 	/// [1] - roll
 	/// [2] - yaw
 
-	const double kp = 70;
+	const double kp = 50;
 	const double ki = 0.7;
-	const double kd = 100;
+	const double kd = 70;
 
 	m_control_angles.setKpid(kp, kd, ki);
 	m_control_angles.use_eI = m_use_integral_angles;
@@ -879,13 +890,13 @@ void Model::calculate_track_to_goal()
 		double sign = p3[2] > 0 ? 1 : -1;
 
 		const double max_yaw_change = angle2rad(30.);
-		const double max_other_change = angle2rad(10.);
+		const double max_other_change = angle2rad(15.);
 
 		const double kp_y = 1.1;
-		const double kd_y = 30;
+		const double kd_y = 20;
 
-		const double kp_tr = 1;
-		const double kd_tr = 7;
+		const double kp_tr = 0.4;
+		const double kd_tr = 30;
 
 		const double k_attenuation = 0.3;
 
@@ -979,4 +990,9 @@ bool Model::found_hover() const
 bool Model::is_goal_reached() const
 {
 	return m_is_goal_reached;
+}
+
+std::deque<Vec3d> &Model::track_points()
+{
+	return m_track_points;
 }

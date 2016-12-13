@@ -243,6 +243,8 @@ public:
 
 	bool is_goal_reached() const;
 
+	std::deque< ct::Vec3d >& track_points();
+
 private:
 	ct::Vec3d m_pos;
 	ct::Vec3d m_prev_pos;
@@ -299,6 +301,8 @@ private:
 	pid_control< double, double > m_control_vert_vel;
 	pid_control< double, double > m_control_vert_vel2;
 	pid_control< ct::Vec2d, double > m_control_vert_horiz;
+
+	std::deque< ct::Vec3d > m_track_points;
 
 	bool m_use_integral_angles;		/// flag for use or not integral error with angles
 	bool m_use_eI_height;

@@ -56,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->hs_yaw_goal->setValue(ui->widgetView->model().yawGoal() / 180. * ui->hs_yaw_goal->maximum());
 
+	ui->chb_drawTrack->setChecked(ui->widgetView->isDrawTrack());
+	ui->chb_route->setChecked(ui->widgetView->isShowRoute());
+
 	ui->hs_vert_vel->setEnabled(false);
 	ui->chb_searchHover->setEnabled(false);
 }
@@ -210,6 +213,17 @@ void MainWindow::onTimeout()
 		ui->lb_goal_reached->setStyleSheet(green_lamp(10));
 	}else{
 		ui->lb_goal_reached->setStyleSheet(red_lamp(10));
+	}
+
+	if(ui->chb_autoNext->isChecked()){
+		if(ui->widgetView->model().is_goal_reached() && ui->widgetView->model().isTrackToGoalPoint()){
+			if(!ui->widgetView->modelRoute().isEnd()){
+				ui->widgetView->model().setGoalPoint(ui->widgetView->modelRoute().current_point());
+				ui->widgetView->modelRoute().next();
+			}else{
+				ui->chb_autoNext->setChecked(false);
+			}
+		}
 	}
 }
 
@@ -382,4 +396,9 @@ void MainWindow::on_pb_toNext_clicked()
 		ui->widgetView->model().setGoalPoint(pt);
 		ui->widgetView->modelRoute().next();
 	}
+}
+
+void MainWindow::on_chb_drawTrack_clicked(bool checked)
+{
+	ui->widgetView->setDrawTrack(checked);
 }

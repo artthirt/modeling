@@ -99,6 +99,7 @@ GLView::GLView(QWidget *parent) :
   , m_prev_e_track(0)
   , m_prev_u(0)
   , m_timer_goal(0)
+  , m_is_draw_track(false)
 {
 	ui->setupUi(this);
 
@@ -214,6 +215,21 @@ void GLView::setShowRoute(bool v)
 {
 	m_show_route = v;
 	set_update();
+}
+
+bool GLView::isShowRoute() const
+{
+	return m_show_route;
+}
+
+void GLView::setDrawTrack(bool v)
+{
+	m_is_draw_track = v;
+}
+
+bool GLView::isDrawTrack() const
+{
+	return m_is_draw_track;
 }
 
 void GLView::init()
@@ -430,6 +446,35 @@ void GLView::draw_goal()
 	m_timer_goal += 0.1;
 }
 
+void GLView::draw_track()
+{
+	std::deque< ct::Vec3d >& tp = m_model.track_points();
+
+	glEnable(GL_BLEND);
+
+	glPointSize(3);
+	glColor3f(0.2, 0.7, 0.2);
+	glBegin(GL_POINTS);
+	for(auto it = tp.begin(); it != tp.end(); it++){
+		glVertex3dv((*it).val);
+	}
+	glEnd();
+
+	glColor3f(0.2, 0.2, 0.7);
+	glBegin(GL_POINTS);
+	for(auto it = tp.begin(); it != tp.end(); it++){
+		ct::Vec3d v = (*it);
+		v[2] = 0;
+		glVertex3dv(v.val);
+	}
+	glEnd();
+
+
+	glPointSize(1);
+
+	glDisable(GL_BLEND);
+}
+
 void GLView::load_xml()
 {
 	QMap< QString, QVariant > params;
@@ -453,6 +498,9 @@ void GLView::load_xml()
 	m_model.setYaw(params["yaw"].toFloat());
 
 	m_model.setYawGoal(params["goal_yaw"].toFloat());
+
+	m_is_draw_track = params["draw_track"].toBool();
+	m_show_route = params["show_route"].toBool();
 }
 
 void GLView::save_xml()
@@ -472,6 +520,9 @@ void GLView::save_xml()
 //	params["roll"] = m_angles[1];
 	params["yaw"] = ct::rad2angle(m_angles[2]);
 	params["goal_yaw"] = m_model.yawGoal();
+
+	params["draw_track"] = m_is_draw_track;
+	params["show_route"] = m_show_route;
 
 	SimpleXML::save_param(xml_config, params);
 }
@@ -601,6 +652,10 @@ void GLView::glDraw()
 
 	if(m_model.isTrackToGoalPoint()){
 		draw_goal();
+	}
+
+	if(m_is_draw_track){
+		draw_track();
 	}
 
 	glEnable(GL_BLEND);

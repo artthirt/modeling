@@ -93,6 +93,8 @@ private slots:
 
 	void on_pb_toNext_clicked();
 
+	void on_chb_drawTrack_clicked(bool checked);
+
 private:
 	Ui::MainWindow *ui;
 

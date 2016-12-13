@@ -43,6 +43,10 @@ public:
 	void generate_route(size_t count);
 
 	void setShowRoute(bool v);
+	bool isShowRoute() const;
+
+	void setDrawTrack(bool v);
+	bool isDrawTrack() const;
 
 private:
 	Ui::GLView *ui;
@@ -79,11 +83,14 @@ private:
 
 	double m_timer_goal;
 
+	bool m_is_draw_track;
+
 	void init();
 	void draw_net();
 	void draw_model();
 	void draw_route();
 	void draw_goal();
+	void draw_track();
 
 	void load_xml();
 	void save_xml();
