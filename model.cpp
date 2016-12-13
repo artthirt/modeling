@@ -18,7 +18,7 @@ const double attenuation = 0.85f;
 /// coefficient friction of oac-tree (for example)
 const double coeff_friction = 0.62f;
 /// for weak epsilon weak
-const double eps = 1e-3;
+const double eps_weak = 1e-3;
 /// for hard epsilon weak
 const double eps_hard = 1e-6;
 /// minumum angle for choose state
@@ -59,12 +59,14 @@ Model::Model()
 	, m_power(false)
 	, m_track_to_goal_point(false)
 	, m_goal_point(10, 10, 10)
-	, m_radius_goal(0.1)
+	, m_radius_goal(3.0)
+	, m_accuracy_goal(0.05)
 	, m_state(NORMAL)
 	, m_use_eI_height(false)
 	, m_search_hover(false)
 	, m_found_hover(false)
 	, m_goal_vert_vel(0)
+	, m_is_goal_reached(false)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -416,9 +418,9 @@ void Model::calculate_angles()
 	/// [1] - roll
 	/// [2] - yaw
 
-	const double kp = 30;
+	const double kp = 70;
 	const double ki = 0.7;
-	const double kd = 70;
+	const double kd = 100;
 
 	m_control_angles.setKpid(kp, kd, ki);
 	m_control_angles.use_eI = m_use_integral_angles;
@@ -492,6 +494,7 @@ void Model::calculate_hovering()
 		if(m_direction_force[2] < 0){
 			m_state = ROTATE_TO_HOVER;
 			setTangageGoal(0);
+			setRollGoal(0);
 			return;
 		}
 		normal_work();
@@ -510,10 +513,10 @@ void Model::normal_work()
 
 	double force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
 
-	if(force < eps && !m_found_hover)
+	if(force < eps_weak && !m_found_hover)
 		return;
 
-	if(m_found_hover && force < eps){
+	if(m_found_hover && force < eps_weak){
 		force = m_force_hover;
 	}
 
@@ -681,7 +684,7 @@ void Model::state_model_position()
 
 	m_vel *= attenuation;
 
-	push_log("after force: " + m_vel.operator std::string());
+//	push_log("after force: " + m_vel.operator std::string());
 
 	if(m_pos[2] + m_vel[2] <= 0){
 		Vec3d v = m_vel;
@@ -731,6 +734,7 @@ void Model::simpleHeightControl()
 			push_log("very bad. quad headfirst");
 			m_state = ROTATE_TO_HOVER;
 			setTangageGoal(0);
+			setRollGoal(0);
 			return;
 		}
 
@@ -821,6 +825,7 @@ void Model::save_params()
 void Model::setGoalPoint(const ct::Vec3d &pt)
 {
 	m_goal_point = pt;
+	m_is_goal_reached = false;
 }
 
 ct::Vec3d Model::goal_point() const
@@ -831,6 +836,9 @@ ct::Vec3d Model::goal_point() const
 void Model::setTrackToGoalPoint(bool v)
 {
 	m_track_to_goal_point = v;
+	if(v){
+		m_is_goal_reached = false;
+	}
 }
 
 bool Model::isTrackToGoalPoint() const
@@ -844,8 +852,10 @@ void Model::calculate_track_to_goal()
 		return;
 
 	Vec3d e = m_goal_point - m_pos;
-	if(e.norm() < m_radius_goal && velocity().norm() * m_dt < eps)
+	if(e.norm() < m_accuracy_goal && velocity().norm() < 3. * eps_weak){
+		m_is_goal_reached = true;
 		return;
+	}
 
 	/// set goal height
 	setHeightGoal(m_goal_point[2]);
@@ -872,10 +882,12 @@ void Model::calculate_track_to_goal()
 		const double max_other_change = angle2rad(10.);
 
 		const double kp_y = 1;
-		const double kd_y = 10;
+		const double kd_y = 30;
 
-		const double kp_tr = 0.5;
-		const double kd_tr = 10;
+		const double kp_tr = 1;
+		const double kd_tr = 30;
+
+		const double k_attenuation = 0.1;
 
 		double e_yaw = a;
 		double de_yaw = e_yaw - m_prev_goal_e[2];
@@ -896,10 +908,15 @@ void Model::calculate_track_to_goal()
 		Vec3d velxy = velocity();
 		velxy[2] = 0;
 
-		if(exy.norm() > m_radius_goal){
-			double n = (exy.norm() / (50 * m_radius_goal));
+		if(exy.norm() > m_accuracy_goal){
+			double n = (exy.norm() / (m_radius_goal));
 
 			ta /= M_PI, ra /= M_PI;
+
+			if(exy.norm() < m_radius_goal){
+				ta -= ta * velxy.norm() / exy.norm() * k_attenuation;
+				ra -= ra * velxy.norm() / exy.norm() * k_attenuation;
+			}
 
 			double dta = ta - m_prev_goal_e[0];
 			double dra = ra - m_prev_goal_e[1];
@@ -957,4 +974,9 @@ double Model::vertVel() const
 bool Model::found_hover() const
 {
 	return m_found_hover;
+}
+
+bool Model::is_goal_reached() const
+{
+	return m_is_goal_reached;
 }

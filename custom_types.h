@@ -97,6 +97,7 @@ public:
 	const T& operator[] (int index) const{
 		return val[index];
 	}
+
 	inline Vec_<T, count>& operator+=( const Vec_<T, count>& v){
 		for(int i = 0; i < count; i++){
 			val[i] += v[i];
@@ -206,6 +207,15 @@ public:
 		}
 		ss << "]";
 		return ss.str();
+	}
+
+	template< typename C >
+	operator Vec_< C, count >() const{
+		Vec_< C, count > res;
+		for(int i = 0; i < count; i++){
+			res.val[i] = val[i];
+		}
+		return res;
 	}
 
 	///******************************

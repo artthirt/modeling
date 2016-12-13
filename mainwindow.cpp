@@ -9,6 +9,28 @@ const double maximum_vert_vel = 3;
 
 const QString config_main("config.main.xml");
 
+QString red_lamp(int radius)
+{
+	return QString("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(255, 137, 133, 255), stop:1 rgba(150, 0, 0, 255));"
+					"border-color: rgb(60, 60, 60);"
+					"border-radius: %1px;").arg(radius);
+}
+
+QString green_lamp(int radius)
+{
+	return QString("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(137, 255, 133, 255), stop:1 rgba(0, 150, 0, 255));"
+				   "border-radius: %1px;"
+				   "border-color: rgb(60, 60, 60);").arg(radius);
+}
+
+//const QString green_lamp("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(137, 255, 133, 255), stop:1 rgba(0, 150, 0, 255));"
+//						 "border-radius: 10px;"
+//						 "border-color: rgb(60, 60, 60);");
+
+//const QString red_lamp("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(255, 137, 133, 255), stop:1 rgba(150, 0, 0, 255));"
+//					   "border-radius: 10px;"
+//					   "border-color: rgb(60, 60, 60);");
+
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
@@ -173,19 +195,21 @@ void MainWindow::onTimeout()
 	ui->lb_vely->setText(QString::number(ui->widgetView->model().velocity()[1], 'f', 3));
 	ui->lb_velz->setText(QString::number(ui->widgetView->model().velocity()[2], 'f', 3));
 
-	ui->lb_vel->setText("V(norm)=" + QString::number(ui->widgetView->model().velocity().norm(), 'f', 3));
+	ui->lb_vel->setText("V(norm)=" + QString::number(ui->widgetView->model().velocity().norm(), 'f', 5));
 	ui->lb_goal_a->setText("goals: φ=" + QString::number(ui->widgetView->model().goal_yaw(), 'f', 2) +
 			" θ=" + QString::number(ui->widgetView->model().goal_tangage(), 'f', 2) +
 			" α=" + QString::number(ui->widgetView->model().goal_roll(), 'f', 2));
 
 	if(ui->widgetView->model().found_hover()){
-		ui->lb_found_hover->setStyleSheet("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(137, 255, 133, 255), stop:1 rgba(0, 150, 0, 255));"
-										  "border-radius: 15px;"
-										  "border-color: rgb(60, 60, 60);");
+		ui->lb_found_hover->setStyleSheet(green_lamp(15));
 	}else{
-		ui->lb_found_hover->setStyleSheet("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(255, 137, 133, 255), stop:1 rgba(150, 0, 0, 255));"
-										  "border-radius: 15px;"
-										  "border-color: rgb(60, 60, 60);");
+		ui->lb_found_hover->setStyleSheet(red_lamp(15));
+	}
+
+	if(ui->widgetView->model().is_goal_reached()){
+		ui->lb_goal_reached->setStyleSheet(green_lamp(10));
+	}else{
+		ui->lb_goal_reached->setStyleSheet(red_lamp(10));
 	}
 }
 
@@ -344,4 +368,18 @@ void MainWindow::on_rb_use_hover_clicked(bool checked)
 void MainWindow::on_chb_useIntegalErrorHeight_clicked(bool checked)
 {
 	ui->widgetView->model().setUseIntegralErrorHeight(checked);
+}
+
+void MainWindow::on_pb_toBegin_clicked()
+{
+	ui->widgetView->modelRoute().first();
+}
+
+void MainWindow::on_pb_toNext_clicked()
+{
+	if(!ui->widgetView->modelRoute().isEnd()){
+		ct::Vec3d pt = ui->widgetView->modelRoute().current_point();
+		ui->widgetView->model().setGoalPoint(pt);
+		ui->widgetView->modelRoute().next();
+	}
 }

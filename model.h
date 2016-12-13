@@ -241,6 +241,8 @@ public:
 	double vertVel() const;
 	bool found_hover() const;
 
+	bool is_goal_reached() const;
+
 private:
 	ct::Vec3d m_pos;
 	ct::Vec3d m_prev_pos;
@@ -313,6 +315,8 @@ private:
 	ct::Vec3d m_goal_point;
 	bool m_track_to_goal_point;
 	double m_radius_goal;
+	double m_accuracy_goal;
+	bool m_is_goal_reached;
 
 	ct::Vec3d m_direction_force;
 	ct::Vec3d m_direct_model;

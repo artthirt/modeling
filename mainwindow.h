@@ -89,6 +89,10 @@ private slots:
 
 	void on_chb_useIntegalErrorHeight_clicked(bool checked);
 
+	void on_pb_toBegin_clicked();
+
+	void on_pb_toNext_clicked();
+
 private:
 	Ui::MainWindow *ui;
 

@@ -205,8 +205,8 @@ void GLView::set_update()
 void GLView::generate_route(size_t count)
 {
 	m_modelRoute.generate_route_uniform(count,
-										ct::Vec3f(-virtual_xy_edge, -virtual_xy_edge, virtual_z_edge/100.f),
-										ct::Vec3f(virtual_xy_edge, virtual_xy_edge, virtual_z_edge/2));
+										ct::Vec3f(-virtual_xy_edge/1.5, -virtual_xy_edge/1.5, virtual_z_edge/100.f),
+										ct::Vec3f(virtual_xy_edge/1.5, virtual_xy_edge/1.5, virtual_z_edge/2));
 	set_update();
 }
 
@@ -279,7 +279,7 @@ void GLView::draw_model()
 	ct::Matd eiler = m_model.eiler();
 	glTranslatef(pos[0], pos[1], pos[2]);
 
-	draw_line(m_model.direction_force(), ct::Vec3d(1, 0.3, 0.3), 1);
+//	draw_line(m_model.direction_force(), ct::Vec3d(1, 0.3, 0.3), 1);
 
 	glMultMatrixd(eiler.ptr());
 
@@ -575,8 +575,8 @@ void GLView::glDraw()
 		calculate_track();
 
 		glTranslatef(0, 0, - (m_current_z + m_delta_z));
-		glRotatef(m_delta_pt.x(), 0, 1, 0);
 		glRotatef(m_delta_pt.y(), 1, 0, 0);
+		glRotatef(m_delta_pt.x(), 0, 0, 1);
 		glRotatef(m_tracking_angle, 0, 0, 1);
 		glTranslatef(-m_model.pos()[0], -m_model.pos()[1], -m_model.pos()[2]);
 	}

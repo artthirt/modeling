@@ -69,7 +69,14 @@ std::vector<ct::Vec3f> &ModelRoute::points()
 	return m_points;
 }
 
-const Vec3f ModelRoute::current_point() const
+Vec3f &ModelRoute::current_point()
+{
+	if(!isEnd())
+		return m_points[m_current_index];
+	return ct::Vec3f::zeros();
+}
+
+const Vec3f &ModelRoute::current_point() const
 {
 	if(!isEnd())
 		return m_points[m_current_index];
