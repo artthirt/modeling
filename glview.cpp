@@ -299,6 +299,7 @@ void GLView::draw_model()
 	const float diffuse_material[] = {0.3f, 0.3f, 0.3f, 1.f};
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_material);
 
+//	qDebug() << "------begin------";
 	for(auto it = m_model.vobjs().begin(); it != m_model.vobjs().end(); it++){
 		const VObj &obj = *it;
 
@@ -317,6 +318,8 @@ void GLView::draw_model()
 			auto mtlIt = mtls.find((std::string)faces.usemtl);
 			if(mtlIt != mtls.end()){
 				const Mtl mtl = (*mtlIt).second;
+
+//				qDebug() << "mtl" << (*mtlIt).first.c_str() << ((std::string)mtl.Kd).c_str();
 
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, mtl.Kd.val);
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mtl.Ka.val);
@@ -353,6 +356,7 @@ void GLView::draw_model()
 			}
 		}
 	}
+//	qDebug() << "------end------";
 	glDisable(GL_LIGHTING);
 
 	glPopMatrix();

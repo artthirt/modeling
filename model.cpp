@@ -881,13 +881,13 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(10.);
 
-		const double kp_y = 1;
+		const double kp_y = 1.1;
 		const double kd_y = 30;
 
 		const double kp_tr = 1;
-		const double kd_tr = 30;
+		const double kd_tr = 7;
 
-		const double k_attenuation = 0.1;
+		const double k_attenuation = 0.3;
 
 		double e_yaw = a;
 		double de_yaw = e_yaw - m_prev_goal_e[2];
@@ -901,7 +901,7 @@ void Model::calculate_track_to_goal()
 		m_angles_goal[2] -= u;
 
 		double ta = cos(a);
-		double ra = sin(a);
+		double ra = 0.5 * sin(a);
 
 		Vec3d exy = e;
 		exy[2] = 0;
