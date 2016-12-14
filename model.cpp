@@ -892,11 +892,11 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(15.);
 
-		const double kp_y = 1.1;
-		const double kd_y = 20;
+		const double kp_y = 1;
+		const double kd_y = 10;
 
 		const double kp_tr = 0.4;
-		const double kd_tr = 30;
+		const double kd_tr = 10;
 
 		const double k_attenuation = 0.3;
 

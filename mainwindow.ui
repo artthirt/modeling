@@ -354,7 +354,7 @@ border-color: rgb(60, 60, 60);</string>
        <item row="2" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>4</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_4">
           <attribute name="title">
