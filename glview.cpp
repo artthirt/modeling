@@ -232,6 +232,17 @@ bool GLView::isDrawTrack() const
 	return m_is_draw_track;
 }
 
+void GLView::setShowGraphics(bool v)
+{
+	m_show_graphics = v;
+	set_update();
+}
+
+bool GLView::isGhowGraphics() const
+{
+	return m_show_graphics;
+}
+
 void GLView::init()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -475,6 +486,121 @@ void GLView::draw_track()
 	glDisable(GL_BLEND);
 }
 
+namespace graphics{
+	const double z1 = -0.010;
+	const double z2 = -0.008;
+	const double z3 = -0.007;
+	const double alpha_blend = 0.9;
+}
+
+void GLView::draw_plane()
+{
+
+	glColor4f(1, 1, 1, graphics::alpha_blend);
+	glBegin(GL_POLYGON);
+	glVertex3f(-1.1, -1.1, graphics::z1);
+	glVertex3f(-1.1,  1.1, graphics::z1);
+	glVertex3f( 1.1,  1.1, graphics::z1);
+	glVertex3f( 1.1, -1.1, graphics::z1);
+	glEnd();
+
+	glColor4d(0, 0, 0, graphics::alpha_blend);
+	glBegin(GL_LINES);
+
+	glVertex3d(-1, -1, graphics::z2);
+	glVertex3d( 1, -1, graphics::z2);
+
+	glVertex3d(-1, -1, graphics::z2);
+	glVertex3d(-1,  1, graphics::z2);
+
+	glEnd();
+}
+
+void GLView::draw_scaled_graph()
+{
+	glScaled(0.2, 0.2, 0.2);
+
+	draw_plane();
+
+}
+
+void GLView::draw_graphics()
+{
+	if(!m_show_graphics)
+		return;
+
+
+	double ar = 1. * rect().width() / rect().height();
+
+
+	glPushMatrix();
+
+	glEnable(GL_BLEND);
+
+	glTranslated(0, 0, -1.01);
+
+	glTranslated(ar/2. - 0.08, 0.38, 0);
+
+	draw_scaled_graph();
+
+	draw_curve_height();
+
+	glDisable(GL_BLEND);
+
+	glPopMatrix();
+}
+
+void GLView::draw_curve_height()
+{
+	std::deque< ct::Vec3d > &tp = m_model.track_points();
+
+	double min_h = 99999999999, max_h = -99999999999;
+	for(auto it = tp.begin(); it != tp.end(); it++){
+		ct::Vec3d &v = *it;
+
+		max_h = std::max(v[2], max_h);
+		min_h = std::min(v[2], min_h);
+	}
+
+	if(max_h > -99999999999){
+		double d_h = 100000;
+		while(max_h / d_h <= 10)
+			d_h /= 10.;
+		while(max_h / d_h > 10)
+			d_h *= 10;
+
+		double x = 0;
+
+		glColor4d(0.7, 0.7, 0.7, graphics::alpha_blend);
+		glBegin(GL_LINES);
+		while(x < max_h){
+			x += d_h;
+
+			double xv = x / max_h;
+
+			glVertex3d(-1, -1 + 2 * xv, graphics::z2);
+			glVertex3d( 1, -1 + 2 * xv, graphics::z2);
+		}
+		glEnd();
+
+	}
+
+	const size_t count_id = 300;
+	size_t id = 0;
+	double d_x = 2. / count_id;
+	double x_beg = tp.size() > count_id? 1 : -1 + d_x * tp.size();
+
+	glBegin(GL_LINE_STRIP);
+	glColor4d(0.7, 0.1, 0.1, 1);
+	for(auto it = tp.begin(); it != tp.end() && id < count_id; it++, id++, x_beg -= d_x){
+		ct::Vec3d &v = *it;
+
+		double y = -1 + 2 * v[2] / max_h;
+		glVertex3d(x_beg, y, graphics::z3);
+	}
+	glEnd();
+}
+
 void GLView::load_xml()
 {
 	QMap< QString, QVariant > params;
@@ -615,6 +741,8 @@ void GLView::glDraw()
 	const float slight[] = {0.0f, 0.0f, 0.0f, 1};
 	const float dlight[] = {0.3f, 0.3f, 0.3f, 1};
 
+	glPushMatrix();/////////////////
+
 	glTranslatef(0, 0, -5);
 
 	if(!m_tracking){
@@ -661,6 +789,10 @@ void GLView::glDraw()
 	glEnable(GL_BLEND);
 	draw_cylinder(virtual_xy_edge, 1, 64, ct::Vec4d(0.8, 0.4, 0.1, 0.5));
 	glDisable(GL_BLEND);
+
+	glPopMatrix(); //////////////////
+
+	draw_graphics();
 
 	swapBuffers();
 }

@@ -49,8 +49,6 @@ private slots:
 
 	void on_pb_rese_angles_clicked();
 
-	void on_dsb_common_force_valueChanged(double arg1);
-
 	void on_hs_yaw_goal_valueChanged(int value);
 
 	void on_hs_tangage_goal_valueChanged(int value);
@@ -94,6 +92,8 @@ private slots:
 	void on_pb_toNext_clicked();
 
 	void on_chb_drawTrack_clicked(bool checked);
+
+	void on_chb_show_graphics_2_clicked(bool checked);
 
 private:
 	Ui::MainWindow *ui;

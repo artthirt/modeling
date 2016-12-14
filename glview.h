@@ -48,10 +48,15 @@ public:
 	void setDrawTrack(bool v);
 	bool isDrawTrack() const;
 
+	void setShowGraphics(bool v);
+	bool isGhowGraphics() const;
+
 private:
 	Ui::GLView *ui;
 	bool m_init;
 	bool m_update;
+
+	bool m_show_graphics;
 
 	double m_prev_e_track;
 	double m_prev_u;
@@ -91,6 +96,11 @@ private:
 	void draw_route();
 	void draw_goal();
 	void draw_track();
+	////// graphic ////////
+	void draw_plane();
+	void draw_scaled_graph();
+	void draw_graphics();
+	void draw_curve_height();
 
 	void load_xml();
 	void save_xml();

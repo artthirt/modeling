@@ -48,6 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect(ui->widget_joystick, SIGNAL(valueChanged(float,float)), this, SLOT(onChangeValue(float,float)));
 
+	ui->widgetView->model().setHeightControl(Model::EGoToToHeight);
+
 	load_xml();
 
 	ui->hs_yaw->setValue(ui->widgetView->yaw() / 180. * ui->hs_yaw->maximum());
@@ -111,11 +113,6 @@ void MainWindow::load_xml()
 	QByteArray bstate = QByteArray::fromBase64(state.toLatin1());
 	restoreState(bstate);
 
-	ui->dsb_common_force->setValue(params["f_common"].toFloat());
-	ui->dsb_f1->setValue(params["f1"].toFloat());
-	ui->dsb_f2->setValue(params["f2"].toFloat());
-	ui->dsb_f3->setValue(params["f3"].toFloat());
-	ui->dsb_f4->setValue(params["f4"].toFloat());
 	ui->dsb_height->setValue(params["height"].toFloat());
 	ui->chb_tracking->setChecked(params["tracking"].toBool());
 
@@ -146,11 +143,6 @@ void MainWindow::save_xml()
 
 	params["state"] = QString(saveState().toBase64());
 
-	params["f_common"] = ui->dsb_common_force->value();
-	params["f1"] = ui->dsb_f1->value();
-	params["f2"] = ui->dsb_f2->value();
-	params["f3"] = ui->dsb_f3->value();
-	params["f4"] = ui->dsb_f4->value();
 	params["height"] = ui->dsb_height->value();
 	params["tracking"] = ui->chb_tracking->isChecked();
 	params["incline_range"] = m_max_incline_range;
@@ -246,10 +238,6 @@ void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 void MainWindow::on_pb_use_forces_clicked(bool checked)
 {
 	ui->widgetView->model().setUseMultipleForces(checked);
-	ui->widgetView->model().setForces(ui->dsb_f1->value(),
-									  ui->dsb_f2->value(),
-									  ui->dsb_f3->value(),
-									  ui->dsb_f4->value());
 }
 
 void MainWindow::on_dsb_f1_valueChanged(double arg1)
@@ -276,14 +264,6 @@ void MainWindow::on_pb_rese_angles_clicked()
 {
 	ui->widgetView->model().reset_angles();
 	ui->pb_use_forces->setChecked(false);
-}
-
-void MainWindow::on_dsb_common_force_valueChanged(double arg1)
-{
-	ui->dsb_f1->setValue(arg1);
-	ui->dsb_f2->setValue(arg1);
-	ui->dsb_f3->setValue(arg1);
-	ui->dsb_f4->setValue(arg1);
 }
 
 void MainWindow::on_dsb_height_valueChanged(double arg1)
@@ -401,4 +381,9 @@ void MainWindow::on_pb_toNext_clicked()
 void MainWindow::on_chb_drawTrack_clicked(bool checked)
 {
 	ui->widgetView->setDrawTrack(checked);
+}
+
+void MainWindow::on_chb_show_graphics_2_clicked(bool checked)
+{
+	ui->widgetView->setShowGraphics(checked);
 }
