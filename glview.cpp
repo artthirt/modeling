@@ -100,6 +100,7 @@ GLView::GLView(QWidget *parent) :
   , m_prev_u(0)
   , m_timer_goal(0)
   , m_is_draw_track(false)
+  , m_show_graphics(false)
 {
 	ui->setupUi(this);
 
