@@ -202,6 +202,43 @@ border-color: rgb(60, 60, 60);</string>
            </property>
           </widget>
          </item>
+         <item row="2" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_14">
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Accuracy</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="dsb_accuracy">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="4" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_15">
+           <item>
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Radius of
+ influence</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="dsb_radius_goal">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
        </item>
        <item row="7" column="0">
@@ -352,7 +389,7 @@ border-color: rgb(60, 60, 60);</string>
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QTabWidget" name="tabWidget">
+        <widget class="QTabWidget" name="tb_params">
          <property name="currentIndex">
           <number>0</number>
          </property>

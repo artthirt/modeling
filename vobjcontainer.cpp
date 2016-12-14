@@ -210,7 +210,7 @@ bool VObjContainer::open(const std::string &fn)
 				std::vector< int > fti;
 				std::vector< int > fni;
 
-				for(int i = 1; i < sl.size(); ++i){
+				for(size_t i = 1; i < sl.size(); ++i){
 					stringlist face = split(sl[i], '/');
 					if(face.size()){
 						fvi.push_back(toInt(face[0]));

@@ -53,7 +53,7 @@ enum WORK_MODE{
 Model::Model()
 	: m_Eheight_control(ENone)
 	, m_heightGoal(8)
-	, m_useMultipleForces(false)
+	, m_useEngines(true)
 	, m_direct_model(1, 0, 0)
 	, m_roll_model(0, 1, 0)
 	, m_power(false)
@@ -298,9 +298,14 @@ void Model::setForce(int index, double v)
 	}
 }
 
-void Model::setUseMultipleForces(bool f)
+void Model::setUseEngines(bool f)
 {
-	m_useMultipleForces = f;
+	m_useEngines = f;
+}
+
+bool Model::isUseEngines() const
+{
+	return m_useEngines;
 }
 
 double Model::force(int index)
@@ -422,7 +427,7 @@ bool Model::isPower() const
 
 void Model::calculate_angles()
 {
-	if(!m_useMultipleForces)
+	if(!m_useEngines)
 		return;
 
 	/// [0] - tangage
@@ -810,12 +815,16 @@ void Model::load_params()
 
 	m_control_vert_vel2.eI() = params["height"].toMap()["integral_vel"].toDouble();
 	m_control_height.eI() = params["height"].toMap()["integral_goal"].toDouble();
+
+	m_useEngines = params["use_engines"].toBool();
+
+	m_accuracy_goal = params["accuracy_goal"].toDouble();
+	m_radius_goal = params["radius_goal"].toDouble();
 }
 
 void Model::save_params()
 {
 	QMap< QString, QVariant > params, pang, pint;
-
 
 	pint["tangage"]		= m_control_angles.eI()[0];
 	pint["roll"]		= m_control_angles.eI()[1];
@@ -829,6 +838,10 @@ void Model::save_params()
 	pint["integral_vel"] = m_control_vert_vel2.eI();
 	pint["integral_goal"] = m_control_height.eI();
 	params["height"] = pint;
+
+	params["use_engines"] = m_useEngines;
+	params["accuracy_goal"] = m_accuracy_goal;
+	params["radius_goal"] = m_radius_goal;
 
 	SimpleXML::save_param(config_file, params);
 }
@@ -990,6 +1003,26 @@ bool Model::found_hover() const
 bool Model::is_goal_reached() const
 {
 	return m_is_goal_reached;
+}
+
+double Model::accuracy_goal() const
+{
+	return m_accuracy_goal;
+}
+
+void Model::setAccuracyGoal(double v)
+{
+	m_accuracy_goal = v;
+}
+
+double Model::radiusOfInfluence_goal() const
+{
+	return m_radius_goal;
+}
+
+void Model::setRadiusOfInfluenceGoal(double v)
+{
+	m_radius_goal = v;
 }
 
 std::deque<Vec3d> &Model::track_points()

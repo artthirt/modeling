@@ -58,8 +58,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->hs_yaw_goal->setValue(ui->widgetView->model().yawGoal() / 180. * ui->hs_yaw_goal->maximum());
 
+	ui->pb_use_forces->setChecked(ui->widgetView->model().isUseEngines());
 	ui->chb_drawTrack->setChecked(ui->widgetView->isDrawTrack());
 	ui->chb_route->setChecked(ui->widgetView->isShowRoute());
+
+	ui->dsb_accuracy->setValue(ui->widgetView->model().accuracy_goal());
+	ui->dsb_radius_goal->setValue(ui->widgetView->model().radiusOfInfluence_goal());
 
 	ui->hs_vert_vel->setEnabled(false);
 	ui->chb_searchHover->setEnabled(false);
@@ -116,9 +120,6 @@ void MainWindow::load_xml()
 	ui->dsb_height->setValue(params["height"].toFloat());
 	ui->chb_tracking->setChecked(params["tracking"].toBool());
 
-	ui->pb_use_forces->setChecked(params["use_forces"].toBool());
-	ui->widgetView->model().setUseMultipleForces(ui->pb_use_forces->isChecked());
-
 	int id = params["height_control"].toInt();
 	if(id == 0){
 		ui->rb_none_height->setChecked(true);
@@ -147,7 +148,6 @@ void MainWindow::save_xml()
 	params["tracking"] = ui->chb_tracking->isChecked();
 	params["incline_range"] = m_max_incline_range;
 
-	params["use_forces"] = ui->pb_use_forces->isChecked();
 	params["height_control"] = ui->rb_none_height->isChecked()? 0 : ui->rb_use_go_to_height->isChecked()? 1 : 2;
 
 	SimpleXML::save_param(config_main, params);
@@ -237,7 +237,7 @@ void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 
 void MainWindow::on_pb_use_forces_clicked(bool checked)
 {
-	ui->widgetView->model().setUseMultipleForces(checked);
+	ui->widgetView->model().setUseEngines(checked);
 }
 
 void MainWindow::on_dsb_f1_valueChanged(double arg1)
@@ -386,4 +386,14 @@ void MainWindow::on_chb_drawTrack_clicked(bool checked)
 void MainWindow::on_chb_show_graphics_2_clicked(bool checked)
 {
 	ui->widgetView->setShowGraphics(checked);
+}
+
+void MainWindow::on_dsb_accuracy_valueChanged(double arg1)
+{
+	ui->widgetView->model().setAccuracyGoal(arg1);
+}
+
+void MainWindow::on_dsb_radius_goal_valueChanged(double arg1)
+{
+	ui->widgetView->model().setRadiusGoal(arg1);
 }

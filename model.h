@@ -122,7 +122,8 @@ public:
 	 * set use forces for 4 engines
 	 * @param f
 	 */
-	void setUseMultipleForces(bool f);
+	void setUseEngines(bool f);
+	bool isUseEngines() const;
 	/**
 	 * @brief force
 	 * get force of engine[index]
@@ -243,6 +244,11 @@ public:
 
 	bool is_goal_reached() const;
 
+	double accuracy_goal() const;
+	void setAccuracyGoal(double v);
+	double radiusOfInfluence_goal() const;
+	void setRadiusOfInfluenceGoal(double v);
+
 	std::deque< ct::Vec3d >& track_points();
 
 private:
@@ -260,7 +266,7 @@ private:
 	EHeightControl m_Eheight_control;
 	double m_heightGoal;
 
-	bool m_useMultipleForces;
+	bool m_useEngines;
 
 	double m_mass;
 	double m_force;

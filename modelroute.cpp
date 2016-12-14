@@ -82,7 +82,7 @@ const Vec3f &ModelRoute::current_point() const
 {
 	if(!isEnd())
 		return m_points[m_current_index];
-	return ct::Vec3f::zeros();
+	return zero_vec;
 }
 
 size_t ModelRoute::current_index() const

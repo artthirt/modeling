@@ -95,6 +95,10 @@ private slots:
 
 	void on_chb_show_graphics_2_clicked(bool checked);
 
+	void on_dsb_accuracy_valueChanged(double arg1);
+
+	void on_dsb_radius_goal_valueChanged(double arg1);
+
 private:
 	Ui::MainWindow *ui;
 
