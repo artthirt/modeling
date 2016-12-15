@@ -3,7 +3,9 @@
 CustomSlider::CustomSlider(QWidget *parent)
 	: QSlider(parent)
 	, m_goal_value(0)
-	, m_dtick(2)
+	, m_kp(8)
+	, m_kd(10)
+	, m_prev_value(0)
 	, m_slider_pressed(false)
 {
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
@@ -25,11 +27,14 @@ void CustomSlider::setGoalValue(float value)
 		m_goal_value = maximum();
 }
 
-void CustomSlider::setDTick(float val)
+double CustomSlider::valueQuadratic() const
 {
-	if(val <=0 )
-		val = 1;
-	m_dtick = val;
+	double v1 = maximum();
+	double res = m_value / v1;
+	if(res >= 0)
+		return res * res;
+	else
+		return -res * res;
 }
 
 void CustomSlider::onTimeout()
@@ -39,9 +44,20 @@ void CustomSlider::onTimeout()
 			m_goal_value = minimum();
 		if(m_goal_value > maximum())
 			m_goal_value = maximum();
-		if(qAbs(m_value - m_goal_value) > 1.5 * m_dtick){
-			float sign = m_goal_value - m_value > 0? 1 : -1;
-			m_value += sign * m_dtick;
+		if(qAbs(m_value - m_goal_value) > 1e-6){
+
+			double e = m_goal_value - m_value;
+			double de = m_value - m_prev_value;
+			m_prev_value = m_value;
+
+			double u = m_kp * e + m_kd * de;
+			m_value += u * m_timer.interval() / 1000.;
+
+			if(m_value > maximum())
+				m_value = maximum();
+			if(m_value < minimum())
+				m_value = minimum();
+
 			setValue(m_value);
 		}else{
 			m_value = m_goal_value;
@@ -58,6 +74,7 @@ void CustomSlider::onSliderPressed()
 void CustomSlider::onSliderReleased()
 {
 	m_slider_pressed = false;
+	m_prev_value = m_value;
 }
 
 void CustomSlider::onChangeValue(int value)

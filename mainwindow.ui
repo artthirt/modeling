@@ -39,7 +39,7 @@
      <x>0</x>
      <y>0</y>
      <width>1208</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -401,6 +401,13 @@ border-color: rgb(60, 60, 60);</string>
            <string>Height control</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_11">
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="dsb_height">
+             <property name="value">
+              <double>8.000000000000000</double>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <layout class="QVBoxLayout" name="verticalLayout_10">
              <property name="topMargin">
@@ -429,18 +436,10 @@ error for height</string>
              </item>
             </layout>
            </item>
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="dsb_height">
-             <property name="value">
-              <double>8.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QCheckBox" name="chb_searchHover">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>search hover
-(default height=1 m)</string>
+              <string>Height</string>
              </property>
             </widget>
            </item>
@@ -480,56 +479,18 @@ error for height</string>
              </layout>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_4">
-             <property name="text">
-              <string>Height</string>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="1">
-            <layout class="QHBoxLayout" name="horizontalLayout_13">
-             <property name="topMargin">
-              <number>0</number>
+            <spacer name="verticalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
              </property>
-             <item>
-              <widget class="QLabel" name="lb_found_hover">
-               <property name="minimumSize">
-                <size>
-                 <width>30</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>30</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.29, fy:0.284, stop:0 rgba(255, 255, 255, 255), stop:1 rgba(150, 150, 150, 255));
-border-radius: 12px;
-border-color: rgb(60, 60, 60);</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>

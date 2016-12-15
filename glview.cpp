@@ -460,7 +460,7 @@ void GLView::draw_goal()
 
 void GLView::draw_track()
 {
-	std::deque< ct::Vec3d >& tp = m_model.track_points();
+	std::deque< TrackPoint >& tp = m_model.track_points();
 
 	glEnable(GL_BLEND);
 
@@ -468,14 +468,14 @@ void GLView::draw_track()
 	glColor3f(0.2, 0.7, 0.2);
 	glBegin(GL_POINTS);
 	for(auto it = tp.begin(); it != tp.end(); it++){
-		glVertex3dv((*it).val);
+		glVertex3dv((*it).v.val);
 	}
 	glEnd();
 
 	glColor3f(0.2, 0.2, 0.7);
 	glBegin(GL_POINTS);
 	for(auto it = tp.begin(); it != tp.end(); it++){
-		ct::Vec3d v = (*it);
+		ct::Vec3d v = (*it).v;
 		v[2] = 0;
 		glVertex3dv(v.val);
 	}
@@ -492,6 +492,7 @@ namespace graphics{
 	const double z2 = -0.008;
 	const double z3 = -0.007;
 	const double alpha_blend = 0.9;
+	const size_t count_id = 300;
 }
 
 void GLView::draw_plane()
@@ -553,11 +554,11 @@ void GLView::draw_graphics()
 
 void GLView::draw_curve_height()
 {
-	std::deque< ct::Vec3d > &tp = m_model.track_points();
+	std::deque< TrackPoint > &tp = m_model.track_points();
 
 	double min_h = 99999999999, max_h = -99999999999;
 	for(auto it = tp.begin(); it != tp.end(); it++){
-		ct::Vec3d &v = *it;
+		ct::Vec3d &v = (*it).v;
 
 		max_h = std::max(v[2], max_h);
 		min_h = std::min(v[2], min_h);
@@ -586,15 +587,14 @@ void GLView::draw_curve_height()
 
 	}
 
-	const size_t count_id = 300;
 	size_t id = 0;
-	double d_x = 2. / count_id;
-	double x_beg = tp.size() > count_id? 1 : -1 + d_x * tp.size();
+	double d_x = 2. / graphics::count_id;
+	double x_beg = tp.size() > graphics::count_id? 1 : -1 + d_x * tp.size();
 
 	glBegin(GL_LINE_STRIP);
 	glColor4d(0.7, 0.1, 0.1, 1);
-	for(auto it = tp.begin(); it != tp.end() && id < count_id; it++, id++, x_beg -= d_x){
-		ct::Vec3d &v = *it;
+	for(auto it = tp.begin(); it != tp.end() && id < graphics::count_id; it++, id++, x_beg -= d_x){
+		ct::Vec3d &v = (*it).v;
 
 		double y = -1 + 2 * v[2] / max_h;
 		glVertex3d(x_beg, y, graphics::z3);

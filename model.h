@@ -10,6 +10,13 @@
 #include "vobjcontainer.h"
 #include "pid_control.h"
 
+struct TrackPoint{
+	TrackPoint(){ time = 0; }
+	TrackPoint(const ct::Vec3d pt, int64_t tm){ v = pt, time = tm;}
+	ct::Vec3d v;
+	int64_t time;
+};
+
 class Model
 {
 public:
@@ -237,10 +244,8 @@ public:
 	 */
 	void setRadiusGoal(double v);
 
-	void setSearchHover(bool v);
 	void setGoalVerticalVelocity(double v);
 	double vertVel() const;
-	bool found_hover() const;
 
 	bool is_goal_reached() const;
 
@@ -249,7 +254,7 @@ public:
 	double radiusOfInfluence_goal() const;
 	void setRadiusOfInfluenceGoal(double v);
 
-	std::deque< ct::Vec3d >& track_points();
+	std::deque< TrackPoint >& track_points();
 
 private:
 	ct::Vec3d m_pos;
@@ -258,6 +263,7 @@ private:
 	ct::Vec3d m_angles;
 	ct::Vec3d m_angles_vel;
 	double m_max_force;
+	int m_state;
 
 	bool m_power;
 
@@ -285,9 +291,6 @@ private:
 	 */
 	ct::Vec3d m_angles_goal;
 
-	int m_state;
-	bool m_search_hover;
-	bool m_found_hover;
 	double m_goal_vert_vel;
 
 	void calculate_angles();
@@ -296,7 +299,6 @@ private:
 
 	void calculate_hovering();
 	void normal_work();
-	void search_hover();
 
 	void simpleHeightControl();
 	void normal_work_simple();
@@ -308,7 +310,7 @@ private:
 	pid_control< double, double > m_control_vert_vel2;
 	pid_control< ct::Vec2d, double > m_control_vert_horiz;
 
-	std::deque< ct::Vec3d > m_track_points;
+	std::deque< TrackPoint > m_track_points;
 
 	bool m_use_integral_angles;		/// flag for use or not integral error with angles
 	bool m_use_eI_height;
@@ -334,6 +336,8 @@ private:
 
 	void load_params();
 	void save_params();
+
+	void push_track_point(const ct::Vec3d pt);
 
 private:
 	VObjContainer m_container;

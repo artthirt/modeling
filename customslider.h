@@ -12,7 +12,8 @@ public:
 	explicit CustomSlider(QWidget *parent = 0);
 
 	void setGoalValue(float value);
-	void setDTick(float val);
+
+	double valueQuadratic() const;
 
 signals:
 
@@ -26,8 +27,10 @@ private:
 	QTimer m_timer;
 	float m_goal_value;
 	float m_value;
-	float m_dtick;
+	float m_prev_value;
 	bool m_slider_pressed;
+	float m_kp;
+	float m_kd;
 };
 
 #endif // CUSTOMSLIDER_H

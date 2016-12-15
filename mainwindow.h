@@ -75,8 +75,6 @@ private slots:
 
 	void on_pb_goToGoal_clicked(bool checked);
 
-	void on_chb_searchHover_clicked(bool checked);
-
 	void on_hs_vert_vel_valueChanged(int value);
 
 	void on_rb_none_height_clicked(bool checked);

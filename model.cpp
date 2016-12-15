@@ -24,7 +24,6 @@ const double eps_hard = 1e-6;
 /// minumum angle for choose state
 const double angle_for_chose = angle2rad(5);
 
-
 const QString config_file("config.model.xml");
 
 ////////////////////////////////////////////////
@@ -63,8 +62,6 @@ Model::Model()
 	, m_accuracy_goal(0.05)
 	, m_state(NORMAL)
 	, m_use_eI_height(false)
-	, m_search_hover(false)
-	, m_found_hover(false)
 	, m_goal_vert_vel(0)
 	, m_is_goal_reached(false)
 {
@@ -116,7 +113,6 @@ void Model::calulcate()
 			simpleHeightControl();
 			break;
 		case EHover:
-			search_hover();
 			calculate_hovering();
 			break;
 		default:
@@ -125,14 +121,7 @@ void Model::calulcate()
 
 	calculate_track_to_goal();
 
-	{
-		const size_t max_track_points = 5000;
-
-		while(m_track_points.size() > max_track_points)
-			m_track_points.pop_back();
-
-		m_track_points.push_front(m_pos);
-	}
+	push_track_point(m_pos);
 }
 
 void Model::setHeightControl(Model::EHeightControl hc)
@@ -172,9 +161,9 @@ const Vec3d &Model::pos() const
 
 Vec3d Model::velocity() const
 {
-	ct::Vec3d v = m_pos - m_prev_pos;
-	v /= m_dt;
-	return v;
+//	ct::Vec3d v = m_pos - m_prev_pos;
+//	v /= m_dt;
+	return m_vel;
 }
 
 Matd Model::eiler() const
@@ -529,12 +518,16 @@ void Model::normal_work()
 
 	double force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
 
-	if(force < eps_weak && !m_found_hover)
-		return;
-
-	if(m_found_hover && force < eps_weak){
-		force = m_force_hover;
+	if(force < eps_weak){
+		force = 1;
+		m_force_1 = m_force_2 = m_force_3 = m_force_4 = 0.25;
 	}
+//	if(force < eps_weak && !m_found_hover)
+//		return;
+
+//	if(m_found_hover && force < eps_weak){
+//		force = m_force_hover;
+//	}
 
 	double pf1 = m_force_1 / force;
 	double pf2 = m_force_2 / force;
@@ -560,57 +553,6 @@ void Model::normal_work()
 	m_force_2 = pf2 * force;
 	m_force_3 = pf3 * force;
 	m_force_4 = pf4 * force;
-}
-
-void Model::search_hover()
-{
-	if(!m_search_hover)
-		return;
-
-	m_goal_vert_vel = 0;
-
-	Vec3d v = velocity();
-
-	const double default_height = 1;
-	static double add_force = 0.1;
-
-	double e = default_height - m_pos[2] + 0 - v[2];
-
-	push_log("error=" + fromFloat(e));
-
-	if(abs(e) < eps_hard){
-		m_found_hover = true;
-
-		m_force_hover = m_force_1 + m_force_2 + m_force_3 + m_force_4;
-	}
-
-	if(!m_found_hover){
-
-		const double kp = 1;
-		const double kd = 1;
-
-		m_control_vert_vel.setKpid(kp, kd, 0);
-		m_control_vert_vel.setGoal(default_height);
-		double u = m_control_vert_vel.get(m_pos[2]);
-
-		m_goal_vert_vel = u;
-		m_goal_vert_vel = value2range(m_goal_vert_vel, add_force);
-
-		if(m_pos[2] < default_height && v[2] <=0){
-			m_force_1 += add_force;
-			m_force_2 += add_force;
-			m_force_3 += add_force;
-			m_force_4 += add_force;
-			add_force += 0.001;
-		}
-		if(m_pos[2] > default_height && v[2] >= 0){
-			m_force_1 -= add_force;
-			m_force_2 -= add_force;
-			m_force_3 -= add_force;
-			m_force_4 -= add_force;
-			add_force /= 2;
-		}
-	}
 }
 
 void Model::state_model_angles()
@@ -846,6 +788,18 @@ void Model::save_params()
 	SimpleXML::save_param(config_file, params);
 }
 
+void Model::push_track_point(const Vec3d pt)
+{
+	const size_t max_track_points = 5000;
+
+	while(m_track_points.size() > max_track_points)
+		m_track_points.pop_back();
+
+	time_t tm = std::time(nullptr);
+
+	m_track_points.push_front(TrackPoint(pt, tm));
+}
+
 void Model::setGoalPoint(const ct::Vec3d &pt)
 {
 	m_goal_point = pt;
@@ -877,6 +831,8 @@ void Model::calculate_track_to_goal()
 
 	Vec3d e = m_goal_point - m_pos;
 	if(e.norm() < m_accuracy_goal && velocity().norm() < 3. * eps_weak){
+		m_angles_goal[0] = 0;
+		m_angles_goal[1] = 0;
 		m_is_goal_reached = true;
 		return;
 	}
@@ -911,18 +867,20 @@ void Model::calculate_track_to_goal()
 		const double kp_tr = 0.4;
 		const double kd_tr = 10;
 
-		const double k_attenuation = 0.3;
+		const double k_attenuation = 0.7;
 
 		double e_yaw = a;
 		double de_yaw = e_yaw - m_prev_goal_e[2];
 		de_yaw = atan2(sin(de_yaw), cos(de_yaw));
 		m_prev_goal_e[2] = e_yaw;
 
-		double u = kp_y * e_yaw + kd_y * de_yaw;
-		u *= m_dt;
-		u = max(-max_yaw_change, min(max_yaw_change, u));
-		u = atan2(sin(u), cos(u));
-		m_angles_goal[2] -= u;
+		if(e.norm() > m_radius_goal){
+			double u = kp_y * e_yaw + kd_y * de_yaw;
+			u *= m_dt;
+			u = max(-max_yaw_change, min(max_yaw_change, u));
+			u = atan2(sin(u), cos(u));
+			m_angles_goal[2] -= u;
+		}
 
 		double ta = cos(a);
 		double ra = 0.5 * sin(a);
@@ -934,12 +892,14 @@ void Model::calculate_track_to_goal()
 
 		if(exy.norm() > m_accuracy_goal){
 			double n = (exy.norm() / (m_radius_goal));
+			n = log(1 + n);
 
 			ta /= M_PI, ra /= M_PI;
 
 			if(exy.norm() < m_radius_goal){
-				ta -= ta * velxy.norm() / exy.norm() * k_attenuation;
-				ra -= ra * velxy.norm() / exy.norm() * k_attenuation;
+				double k = exy.norm() / m_radius_goal * velxy.norm();
+				ta -= ta * k * k_attenuation;
+				ra -= ra * k * k_attenuation;
 			}
 
 			double dta = ta - m_prev_goal_e[0];
@@ -979,12 +939,6 @@ void Model::setRadiusGoal(double v)
 	m_radius_goal = v;
 }
 
-void Model::setSearchHover(bool v)
-{
-	m_use_eI_height = v;
-	m_search_hover = v;
-}
-
 void Model::setGoalVerticalVelocity(double v)
 {
 	m_goal_vert_vel = v;
@@ -993,11 +947,6 @@ void Model::setGoalVerticalVelocity(double v)
 double Model::vertVel() const
 {
 	return velocity()[2];
-}
-
-bool Model::found_hover() const
-{
-	return m_found_hover;
 }
 
 bool Model::is_goal_reached() const
@@ -1025,7 +974,7 @@ void Model::setRadiusOfInfluenceGoal(double v)
 	m_radius_goal = v;
 }
 
-std::deque<Vec3d> &Model::track_points()
+std::deque<TrackPoint> &Model::track_points()
 {
 	return m_track_points;
 }

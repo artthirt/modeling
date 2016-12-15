@@ -65,8 +65,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->dsb_accuracy->setValue(ui->widgetView->model().accuracy_goal());
 	ui->dsb_radius_goal->setValue(ui->widgetView->model().radiusOfInfluence_goal());
 
-	ui->hs_vert_vel->setEnabled(false);
-	ui->chb_searchHover->setEnabled(false);
+	if(!ui->rb_use_hover->isChecked())
+		ui->hs_vert_vel->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -98,12 +98,12 @@ void MainWindow::on_hs_yaw_goal_valueChanged(int value)
 
 void MainWindow::on_hs_tangage_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setTangageGoal(m_max_incline_range * value/ui->hs_yaw->maximum());
+	ui->widgetView->model().setTangageGoal(m_max_incline_range * ui->hs_tangage_goal->valueQuadratic());
 }
 
 void MainWindow::on_hs_roll_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setRollGoal(m_max_incline_range * value/ui->hs_yaw->maximum());
+	ui->widgetView->model().setRollGoal(m_max_incline_range * ui->hs_roll_goal->value());
 }
 
 void MainWindow::load_xml()
@@ -194,12 +194,6 @@ void MainWindow::onTimeout()
 	ui->lb_goal_a->setText("goals: φ=" + QString::number(ui->widgetView->model().goal_yaw(), 'f', 2) +
 			" θ=" + QString::number(ui->widgetView->model().goal_tangage(), 'f', 2) +
 			" α=" + QString::number(ui->widgetView->model().goal_roll(), 'f', 2));
-
-	if(ui->widgetView->model().found_hover()){
-		ui->lb_found_hover->setStyleSheet(green_lamp(15));
-	}else{
-		ui->lb_found_hover->setStyleSheet(red_lamp(15));
-	}
 
 	if(ui->widgetView->model().is_goal_reached()){
 		ui->lb_goal_reached->setStyleSheet(green_lamp(10));
@@ -322,17 +316,9 @@ void MainWindow::on_pb_goToGoal_clicked(bool checked)
 	ui->widgetView->model().setTrackToGoalPoint(checked);
 }
 
-void MainWindow::on_chb_searchHover_clicked(bool checked)
-{
-	if(checked){
-		ui->rb_use_hover->setChecked(true);
-	}
-	ui->widgetView->model().setSearchHover(checked);
-}
-
 void MainWindow::on_hs_vert_vel_valueChanged(int value)
 {
-	double v = 1.0 * value / ui->hs_vert_vel->maximum();
+	double v = ui->hs_vert_vel->valueQuadratic();
 	v *= maximum_vert_vel;
 	ui->widgetView->model().setGoalVerticalVelocity(v);
 }
@@ -341,22 +327,18 @@ void MainWindow::on_rb_none_height_clicked(bool checked)
 {
 	ui->widgetView->model().setHeightControl(Model::ENone);
 	ui->hs_vert_vel->setEnabled(false);
-	ui->chb_searchHover->setEnabled(false);
 }
 
 void MainWindow::on_rb_use_go_to_height_clicked(bool checked)
 {
 	ui->widgetView->model().setHeightControl(Model::EGoToToHeight);
-	ui->chb_searchHover->setChecked(false);
 	ui->hs_vert_vel->setEnabled(false);
-	ui->chb_searchHover->setEnabled(false);
 }
 
 void MainWindow::on_rb_use_hover_clicked(bool checked)
 {
 	ui->widgetView->model().setHeightControl(Model::EHover);
 	ui->hs_vert_vel->setEnabled(true);
-	ui->chb_searchHover->setEnabled(true);
 }
 
 void MainWindow::on_chb_useIntegalErrorHeight_clicked(bool checked)
