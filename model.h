@@ -253,6 +253,8 @@ public:
 	void setAccuracyGoal(double v);
 	double radiusOfInfluence_goal() const;
 	void setRadiusOfInfluenceGoal(double v);
+	void setAccuracyVelocity(double val);
+	double accuracyVelocity() const;
 
 	std::deque< TrackPoint >& track_points();
 
@@ -328,6 +330,7 @@ private:
 	bool m_track_to_goal_point;
 	double m_radius_goal;
 	double m_accuracy_goal;
+	double m_accuracy_velocity;
 	bool m_is_goal_reached;
 
 	ct::Vec3d m_direction_force;

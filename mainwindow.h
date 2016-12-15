@@ -97,6 +97,8 @@ private slots:
 
 	void on_dsb_radius_goal_valueChanged(double arg1);
 
+	void on_dsb_accuracy_vel_valueChanged(double arg1);
+
 private:
 	Ui::MainWindow *ui;
 

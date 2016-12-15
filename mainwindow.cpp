@@ -64,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->dsb_accuracy->setValue(ui->widgetView->model().accuracy_goal());
 	ui->dsb_radius_goal->setValue(ui->widgetView->model().radiusOfInfluence_goal());
+	ui->dsb_accuracy_vel->setValue(ui->widgetView->model().accuracyVelocity());
 
 	if(!ui->rb_use_hover->isChecked())
 		ui->hs_vert_vel->setEnabled(false);
@@ -378,4 +379,9 @@ void MainWindow::on_dsb_accuracy_valueChanged(double arg1)
 void MainWindow::on_dsb_radius_goal_valueChanged(double arg1)
 {
 	ui->widgetView->model().setRadiusGoal(arg1);
+}
+
+void MainWindow::on_dsb_accuracy_vel_valueChanged(double arg1)
+{
+	ui->widgetView->model().setAccuracyVelocity(arg1);
 }

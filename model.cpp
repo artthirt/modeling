@@ -64,6 +64,7 @@ Model::Model()
 	, m_use_eI_height(false)
 	, m_goal_vert_vel(0)
 	, m_is_goal_reached(false)
+	, m_accuracy_velocity(3 * eps_weak)
 {
 	m_mass = 1;
 	m_kp_vel = 1;
@@ -762,6 +763,7 @@ void Model::load_params()
 
 	m_accuracy_goal = params["accuracy_goal"].toDouble();
 	m_radius_goal = params["radius_goal"].toDouble();
+	m_accuracy_velocity = params["accuracy_vel"].toDouble();
 }
 
 void Model::save_params()
@@ -784,6 +786,7 @@ void Model::save_params()
 	params["use_engines"] = m_useEngines;
 	params["accuracy_goal"] = m_accuracy_goal;
 	params["radius_goal"] = m_radius_goal;
+	params["accuracy_vel"] = m_accuracy_velocity;
 
 	SimpleXML::save_param(config_file, params);
 }
@@ -830,7 +833,7 @@ void Model::calculate_track_to_goal()
 		return;
 
 	Vec3d e = m_goal_point - m_pos;
-	if(e.norm() < m_accuracy_goal && velocity().norm() < 3. * eps_weak){
+	if(e.norm() < m_accuracy_goal && velocity().norm() < m_accuracy_velocity){
 		m_angles_goal[0] = 0;
 		m_angles_goal[1] = 0;
 		m_is_goal_reached = true;
@@ -883,7 +886,7 @@ void Model::calculate_track_to_goal()
 		}
 
 		double ta = cos(a);
-		double ra = 0.5 * sin(a);
+		double ra = sin(a);
 
 		Vec3d exy = e;
 		exy[2] = 0;
@@ -972,6 +975,16 @@ double Model::radiusOfInfluence_goal() const
 void Model::setRadiusOfInfluenceGoal(double v)
 {
 	m_radius_goal = v;
+}
+
+void Model::setAccuracyVelocity(double val)
+{
+	m_accuracy_velocity = val;
+}
+
+double Model::accuracyVelocity() const
+{
+	return m_accuracy_velocity;
 }
 
 std::deque<TrackPoint> &Model::track_points()

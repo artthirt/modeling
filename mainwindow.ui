@@ -140,13 +140,6 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="4">
-          <widget class="QPushButton" name="pb_rese_angles">
-           <property name="text">
-            <string>Reset</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="4">
           <layout class="QHBoxLayout" name="horizontalLayout_11">
            <item>
@@ -223,7 +216,29 @@ border-color: rgb(60, 60, 60);</string>
            </item>
           </layout>
          </item>
-         <item row="4" column="2">
+         <item row="3" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_16">
+           <item>
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>Accuracy 
+ velocity</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="dsb_accuracy_vel">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="4">
           <layout class="QHBoxLayout" name="horizontalLayout_15">
            <item>
             <widget class="QLabel" name="label_14">
@@ -241,6 +256,13 @@ border-color: rgb(60, 60, 60);</string>
             </widget>
            </item>
           </layout>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPushButton" name="pb_rese_angles">
+           <property name="text">
+            <string>Reset</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
