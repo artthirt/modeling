@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
   , m_force(0)
   , m_forceGoal(0)
   , m_pressed_force(false)
-  , m_max_incline_range(30)
+  , m_max_incline_range(40)
 {
 	ui->setupUi(this);
 
@@ -103,7 +103,7 @@ void MainWindow::on_hs_tangage_goal_valueChanged(int value)
 
 void MainWindow::on_hs_roll_goal_valueChanged(int value)
 {
-	ui->widgetView->model().setRollGoal(m_max_incline_range * ui->hs_roll_goal->value());
+	ui->widgetView->model().setRollGoal(m_max_incline_range * ui->hs_roll_goal->valueQuadratic());
 }
 
 void MainWindow::load_xml()
