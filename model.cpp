@@ -13,7 +13,7 @@ using namespace std;
 const double gravity = 9.8f;
 const int maximum_logs = 1000;
 
-const double attenuation = 0.85f;
+const double attenuation = 0.97f;
 
 /// coefficient friction of oac-tree (for example)
 const double coeff_friction = 0.62f;
@@ -57,7 +57,7 @@ Model::Model()
 	, m_roll_model(0, 1, 0)
 	, m_power(false)
 	, m_track_to_goal_point(false)
-	, m_goal_point(10, 10, 10)
+	, m_goal_point(32, 32, 10)
 	, m_radius_goal(3.0)
 	, m_accuracy_goal(0.05)
 	, m_state(NORMAL)
@@ -859,18 +859,17 @@ void Model::calculate_track_to_goal()
 
 		double a = atan2(sina, cosa);		/// angle
 		a = p3[2] > 0 ? a : -a;				/// direction of angle
-		double sign = p3[2] > 0 ? 1 : -1;
 
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(15.);
 
 		const double kp_y = 1;
-		const double kd_y = 10;
+		const double kd_y = 3;
 
-		const double kp_tr = 0.4;
+		const double kp_tr = 1;
 		const double kd_tr = 10;
 
-		const double k_attenuation = 0.7;
+		const double speed_max = 1;
 
 		double e_yaw = a;
 		double de_yaw = e_yaw - m_prev_goal_e[2];
@@ -894,30 +893,25 @@ void Model::calculate_track_to_goal()
 		velxy[2] = 0;
 
 		if(exy.norm() > m_accuracy_goal){
-			double n = (exy.norm() / (m_radius_goal));
+			double n = exy.norm();
 			n = log(1 + n);
+			m_control_normxy.setKpid(kp_tr, kd_tr, 0);
+			m_control_normxy.setGoal(0);
+			double u = m_control_normxy.get(n) * m_dt;
 
-			ta /= M_PI, ra /= M_PI;
-
+			double v = velxy.norm(), v_max = speed_max;
 			if(exy.norm() < m_radius_goal){
-				double k = exy.norm() / m_radius_goal * velxy.norm();
-				ta -= ta * k * k_attenuation;
-				ra -= ra * k * k_attenuation;
+				v_max = exy.norm() / m_radius_goal * speed_max;
 			}
+			m_control_velxy.setKpid(2, 170, 0);
+			m_control_velxy.setGoal(v_max);
+			double vu = m_control_velxy.get(v) * m_dt;
 
-			double dta = ta - m_prev_goal_e[0];
-			double dra = ra - m_prev_goal_e[1];
-			m_prev_goal_e[0] = ta;
-			m_prev_goal_e[1] = ra;
+			double uta = value2range((vu - u) * ta, max_other_change);
+			double ura = value2range((vu - u) * ra, max_other_change);
 
-			double uta = kp_tr * ta + kd_tr * dta;
-			double ura = kp_tr * ra + kd_tr * dra;
-
-			m_angles_goal[0] = uta * n;
-			m_angles_goal[0] = value2range(m_angles_goal[0], max_other_change);
-			m_angles_goal[1] = ura * n;
-			m_angles_goal[1] = value2range(m_angles_goal[1], max_other_change);
-
+			m_angles_goal[0] = uta;
+			m_angles_goal[1] = ura;
 		}else{
 			m_angles_goal[0] = 0;
 			m_angles_goal[1] = 0;

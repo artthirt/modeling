@@ -310,6 +310,8 @@ private:
 	pid_control< ct::Vec3d, double > m_control_angles;
 	pid_control< double, double > m_control_vert_vel;
 	pid_control< double, double > m_control_vert_vel2;
+	pid_control< double, double > m_control_normxy;
+	pid_control< double, double > m_control_velxy;
 	pid_control< ct::Vec2d, double > m_control_vert_horiz;
 
 	std::deque< TrackPoint > m_track_points;
