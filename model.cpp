@@ -864,10 +864,13 @@ void Model::calculate_track_to_goal()
 		const double max_other_change = angle2rad(15.);
 
 		const double kp_y = 1;
-		const double kd_y = 3;
+		const double kd_y = 10;
 
 		const double kp_tr = 1;
 		const double kd_tr = 10;
+
+		const double kp_vel = 1;
+		const double kd_vel = 140;
 
 		const double speed_max = 1;
 
@@ -894,7 +897,7 @@ void Model::calculate_track_to_goal()
 
 		if(exy.norm() > m_accuracy_goal){
 			double n = exy.norm();
-			n = log(1 + n);
+			n = log(1 + 2 * n);
 			m_control_normxy.setKpid(kp_tr, kd_tr, 0);
 			m_control_normxy.setGoal(0);
 			double u = m_control_normxy.get(n) * m_dt;
@@ -903,7 +906,7 @@ void Model::calculate_track_to_goal()
 			if(exy.norm() < m_radius_goal){
 				v_max = exy.norm() / m_radius_goal * speed_max;
 			}
-			m_control_velxy.setKpid(2, 170, 0);
+			m_control_velxy.setKpid(kp_vel, kd_vel, 0);
 			m_control_velxy.setGoal(v_max);
 			double vu = m_control_velxy.get(v) * m_dt;
 
