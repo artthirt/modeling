@@ -101,6 +101,7 @@ GLView::GLView(QWidget *parent) :
   , m_timer_goal(0)
   , m_is_draw_track(false)
   , m_show_graphics(false)
+  , m_bind_rotation(true)
 {
 	ui->setupUi(this);
 
@@ -242,6 +243,16 @@ void GLView::setShowGraphics(bool v)
 bool GLView::isGhowGraphics() const
 {
 	return m_show_graphics;
+}
+
+void GLView::setBindToRotation(bool v)
+{
+	m_bind_rotation = v;
+}
+
+bool GLView::isBindToRotation() const
+{
+	return m_bind_rotation;
 }
 
 void GLView::init()
@@ -656,6 +667,8 @@ void GLView::save_xml()
 
 void GLView::calculate_track()
 {
+	if(!m_bind_rotation)
+		return;
 //		ct::Vec3f ps = m_model.pos();
 	ct::Vec3d dm = m_model.direct_model();
 

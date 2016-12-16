@@ -99,6 +99,8 @@ private slots:
 
 	void on_dsb_accuracy_vel_valueChanged(double arg1);
 
+	void on_chb_bind_rotation_clicked(bool checked);
+
 private:
 	Ui::MainWindow *ui;
 

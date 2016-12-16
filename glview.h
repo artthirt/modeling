@@ -51,6 +51,9 @@ public:
 	void setShowGraphics(bool v);
 	bool isGhowGraphics() const;
 
+	void setBindToRotation(bool v);
+	bool isBindToRotation() const;
+
 private:
 	Ui::GLView *ui;
 	bool m_init;
@@ -65,6 +68,8 @@ private:
 	double m_tracking_angle;
 
 	bool m_show_route;
+
+	bool m_bind_rotation;
 
 	QTimer m_timer;
 	QTimer m_timer_model;

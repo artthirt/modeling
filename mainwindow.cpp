@@ -385,3 +385,8 @@ void MainWindow::on_dsb_accuracy_vel_valueChanged(double arg1)
 {
 	ui->widgetView->model().setAccuracyVelocity(arg1);
 }
+
+void MainWindow::on_chb_bind_rotation_clicked(bool checked)
+{
+	ui->widgetView->setBindToRotation(checked);
+}
