@@ -177,13 +177,13 @@ public:
 	inline T min() const{
 		T res = val[0];
 		for(int i = 1; i < count; i++)
-			res = ::min(res, val[i]);
+			res = std::min(res, val[i]);
 		return res;
 	}
 	inline T max() const{
 		T res = val[0];
 		for(int i = 1; i < count; i++)
-			res = ::max(res, val[i]);
+			res = std::max(res, val[i]);
 		return res;
 	}
 

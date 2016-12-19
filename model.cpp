@@ -525,13 +525,12 @@ void Model::state_model_angles()
 		return;
 
 	/// for some uncertainty that influence the each force
-	const double coeff_f1 = 0.985;
-	const double coeff_f2 = 0.983;
-	const double coeff_f3 = 0.988;
-	const double coeff_f4 = 0.982;
+	const Vec4d coeffs_f = Vec4d(0.985, 0.983, 0.988, 0.982);
 
-	double df_12 = coeff_f1 * m_forces[0] - coeff_f2 * m_forces[1];
-	double df_34 = coeff_f3 * m_forces[2] - coeff_f4 * m_forces[3];
+	Vec4d forces = m_forces * coeffs_f;
+
+	double df_12 = forces[0] - forces[1];
+	double df_34 = forces[2] - forces[3];
 
 	if(df_12 != 0 || df_34 != 0){
 
@@ -553,7 +552,7 @@ void Model::state_model_angles()
 
 	}
 	/// yaw = F1 + F2 - (F3 + F4)
-	double df_1234 = m_forces[0] + m_forces[1] - m_forces[2] - m_forces[3];
+	double df_1234 = forces[0] + forces[1] - forces[2] - forces[3];
 	if(df_1234){
 		double a1234 = df_1234 / m_mass;
 		double w_1234 = sqrt(std::abs(a1234) / m_arm) * m_dt;
