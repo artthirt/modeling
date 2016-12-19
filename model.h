@@ -75,13 +75,6 @@ public:
 	 */
 	ct::Matd eiler() const;
 	/**
-	 * @brief set_force
-	 * for old force
-	 * @param force
-	 */
-	void set_force(double force);
-	double force() const;
-	/**
 	 * @brief is_dynamic
 	 * if some changes or power on
 	 * @return
@@ -277,7 +270,6 @@ private:
 	bool m_useEngines;
 
 	double m_mass;
-	double m_force;
 
 	double m_dt;
 	double m_kp_vel;
@@ -321,11 +313,8 @@ private:
 
 	ct::Vec3d m_prev_goal_e;	/// previous error for go to goal;
 
-	double m_force_1;
-	double m_force_2;
-	double m_force_3;
-	double m_force_4;
-	double m_force_hover;
+	ct::Vec4d m_forces;
+	ct::Vec4d m_prev_forces;
 	double m_arm;
 
 	ct::Vec3d m_goal_point;

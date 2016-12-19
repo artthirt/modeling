@@ -32,8 +32,6 @@ public:
 	float tangage() const;
 	float roll() const;
 
-	void set_force(float f);
-
 	void setHeightGoal(float h);
 
 	void set_tracking(bool v);

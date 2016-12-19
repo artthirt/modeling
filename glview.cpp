@@ -124,7 +124,7 @@ GLView::GLView(QWidget *parent) :
 #ifdef _MSC_VER
 	QGLFormat newFormat = format();
 	newFormat.setSampleBuffers(true);
-	newFormat.setSamples(4);
+	newFormat.setSamples(8);
 	setFormat(newFormat);
 #endif
 }
@@ -180,12 +180,6 @@ float GLView::tangage() const
 float GLView::roll() const
 {
 	return ct::rad2angle(m_angles[1]);
-}
-
-void GLView::set_force(float f)
-{
-	m_model.set_force(f);
-	set_update();
 }
 
 void GLView::setHeightGoal(float h)

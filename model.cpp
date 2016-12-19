@@ -72,8 +72,7 @@ Model::Model()
 	m_kp_angle = 1;
 	m_kd_angle = 1;
 	m_dt = 1.f/100;
-	m_force = 0;
-	m_max_force = 15.;
+	m_max_force = 30.;
 
 //	m_prev_e = 0;
 //	m_e_I = 0;
@@ -81,13 +80,7 @@ Model::Model()
 //	m_eI_height = 0;
 //	m_prev_e_height = 0;
 
-	m_force_1 = 0;
-	m_force_2 = 0;
-	m_force_3 = 0;
-	m_force_4 = 0;
 	m_arm = 0.2f;
-
-	m_force_hover = 0;
 
 	load_params();
 
@@ -107,8 +100,6 @@ void Model::calulcate()
 	state_model_angles();
 	state_model_position();
 
-	calculate_angles();
-
 	switch (m_Eheight_control) {
 		case EGoToToHeight:
 			simpleHeightControl();
@@ -119,6 +110,7 @@ void Model::calulcate()
 		default:
 			break;
 	}
+	calculate_angles();
 
 	calculate_track_to_goal();
 
@@ -132,7 +124,6 @@ void Model::setHeightControl(Model::EHeightControl hc)
 
 void Model::initialize()
 {
-	m_force = 0;
 	m_pos = Vec3d();
 	m_angles = Vec3d();
 	m_angles_vel = Vec3d();
@@ -170,16 +161,6 @@ Vec3d Model::velocity() const
 Matd Model::eiler() const
 {
 	return get_eiler_mat4(m_angles);
-}
-
-void Model::set_force(double force)
-{
-	m_force = force;
-}
-
-double Model::force() const
-{
-	return m_force;
 }
 
 bool Model::is_dynamic() const
@@ -260,32 +241,14 @@ void Model::setForces(double f1, double f2, double f3, double f4)
 	if(f2 < 0) f2 = 0;
 	if(f3 < 0) f3 = 0;
 	if(f4 < 0) f4 = 0;
-	m_force_1 = f1;
-	m_force_2 = f2;
-	m_force_3 = f3;
-	m_force_4 = f4;
+	m_forces = Vec4d(f1, f2, f3, f4);
 }
 
 void Model::setForce(int index, double v)
 {
 	if(v < 0)
 		v = 0;
-	switch (index) {
-		case 1:
-			m_force_1 = v;
-			break;
-		case 2:
-			m_force_2 = v;
-			break;
-		case 3:
-			m_force_3 = v;
-			break;
-		case 4:
-			m_force_4 = v;
-			break;
-		default:
-			break;
-	}
+	m_forces[index - 1] = v;
 }
 
 void Model::setUseEngines(bool f)
@@ -300,24 +263,16 @@ bool Model::isUseEngines() const
 
 double Model::force(int index)
 {
-	if(index == 1)
-		return m_force_1;
-	if(index == 2)
-		return m_force_2;
-	if(index == 3)
-		return m_force_3;
-	if(index == 4)
-		return m_force_4;
-	return 0;
+	return m_forces[index - 1];
 }
 
 void Model::reset_angles()
 {
 	m_angles = Vec3d::zeros();
-	m_force_1 = 0;
-	m_force_2 = 0;
-	m_force_3 = 0;
-	m_force_4 = 0;
+	m_forces = Vec4d::zeros();
+
+	m_control_angles.eI() = Vec3d::zeros();
+	m_control_height.eI() = 0;
 
 	m_pos = Vec3d::zeros();
 
@@ -424,9 +379,10 @@ void Model::calculate_angles()
 	/// [1] - roll
 	/// [2] - yaw
 
-	const double kp = 50;
-	const double ki = 0.7;
-	const double kd = 70;
+	const double kp = 10.00;
+	const double ki = 0.10;
+	const double kd = 0.30;
+	const double ka = 1.0;
 
 	m_control_angles.setKpid(kp, kd, ki);
 	m_control_angles.use_eI = m_use_integral_angles;
@@ -435,9 +391,8 @@ void Model::calculate_angles()
 
 	Vec3d u = m_control_angles.get(m_angles);
 	//u = sign(u) * (u * u);
-	u *= m_mass * m_dt;
 
-	double avg_f = m_force;
+	//double avg_f = m_force;
 	/// f1 + f3 -> -tangage
 	///	f2 + f4 -> +tangage
 	///	f1 + f4 -> -roll
@@ -445,52 +400,65 @@ void Model::calculate_angles()
 	/// f1 + f2 > f2 + f4 -> +yaw
 	/// f1 + f2 < f2 + f4 -> -yaw
 
+//	u = values2range(u, -m_max_force, m_max_force);
+
 	u /= 4;
+	double force0 = m_forces.sum();
 
-	m_force_1 = avg_f/4 + u[0] - u[1] + u[2];
-	m_force_3 = avg_f/4 + u[0] + u[1] - u[2];
-	m_force_2 = avg_f/4 - u[0] + u[1] + u[2];
-	m_force_4 = avg_f/4 - u[0] - u[1] - u[2];
+	m_prev_forces = m_forces;
 
-	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
-	double pf1 = m_force_1/part_f;
-	double pf2 = m_force_2/part_f;
-	double pf3 = m_force_3/part_f;
-	double pf4 = m_force_4/part_f;
+	Vec4d vu;
 
-	m_force_1 = pf1 * m_force;
-	m_force_2 = pf2 * m_force;
-	m_force_3 = pf3 * m_force;
-	m_force_4 = pf4 * m_force;
+	vu[0] = force0 +	u[0]	- u[1] + u[2];
+	vu[2] = force0 +	u[0]	+ u[1] - u[2];
+	vu[1] = force0 + (-u[0])	+ u[1] + u[2];
+	vu[3] = force0 + (-u[0])	- u[1] - u[2];
 
-//	m_force_1 = /*avg_f*/ - u[1]/4;
-//	m_force_4 = /*avg_f*/ - u[1]/4;
-//	m_force_3 = /*avg_f*/ + u[1]/4;
-//	m_force_2 = /*avg_f*/ + u[1]/4;
+	double force1 = vu.sum();
 
-//	m_force_1 = /*avg_f*/ - u[2]/4;
-//	m_force_2 = /*avg_f*/ - u[2]/4;
-//	m_force_4 = /*avg_f*/ + u[2]/4;
-//	m_force_2 = /*avg_f*/ + u[2]/4;
+	if(force1){
+//	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+		Vec4d pfs = vu / force1;
+		m_forces = pfs * force0;
+	}
+	m_forces = values2range(m_forces, 0., m_max_force);
+}
 
-	m_force_1 = std::max(0., m_force_1);
-	m_force_2 = std::max(0., m_force_2);
-	m_force_3 = std::max(0., m_force_3);
-	m_force_4 = std::max(0., m_force_4);
+void Model::normal_work_simple()
+{
+//	double e = m_heightGoal - m_pos[2];
+//	Vec3f vec_force = normal * m_force;
+//	float force = vec_force[2];
 
-	m_force_1 = std::min(m_max_force, m_force_1);
-	m_force_2 = std::min(m_max_force, m_force_2);
-	m_force_3 = std::min(m_max_force, m_force_3);
-	m_force_4 = std::min(m_max_force, m_force_4);
-//	u /= (m_mass * m_arm);
-//	Vec3f w = sign(u) * sqrt(u);
+	const double kp = 3.5;
+	const double kd = 30.0;
+	const double ki = 0.2;
 
-//	Vec3f arm_1(m_arm, m_arm, 0);
-//	Vec3f arm_2(-m_arm, -m_arm, 0);
-//	Vec3f arm_3(m_arm, -m_arm, 0);
-//	Vec3f arm_4(-m_arm, m_arm, 0);
+	m_control_height.setGoal(m_heightGoal);
+	m_control_height.setKpid(kp, kd, ki);
+	m_control_height.set_use_eI(m_use_eI_height);
 
+//	m_e_I += e;
 
+//	double de = e - m_prev_e;
+//	m_prev_e = e;
+	double f = m_forces.sum();
+	double prevf = f;
+
+	double u = m_control_height.get(m_pos[2]);
+
+	u = value2range(u, -m_max_force, m_max_force);
+
+	f = u;
+	f = value2range(f, 0., m_max_force);
+
+	if(prevf){
+
+		Vec4d pfs = m_forces / prevf;
+		m_forces = pfs * f;
+	}else{
+		m_forces = f / 4.;
+	}
 }
 
 void Model::calculate_hovering()
@@ -517,11 +485,11 @@ void Model::normal_work()
 	const double ki = 0.1;
 	const double kd = 1;
 
-	double force = m_force_1 + m_force_2 + m_force_3 + m_force_4;
+	double force = m_forces.sum();
 
 	if(force < eps_weak){
 		force = 1;
-		m_force_1 = m_force_2 = m_force_3 = m_force_4 = 0.25;
+		m_forces = 0.25;
 	}
 //	if(force < eps_weak && !m_found_hover)
 //		return;
@@ -530,10 +498,7 @@ void Model::normal_work()
 //		force = m_force_hover;
 //	}
 
-	double pf1 = m_force_1 / force;
-	double pf2 = m_force_2 / force;
-	double pf3 = m_force_3 / force;
-	double pf4 = m_force_4 / force;
+	Vec4d pfs = m_forces / force;
 
 	Vec3d v = velocity();
 
@@ -544,16 +509,13 @@ void Model::normal_work()
 
 	double u = m_control_vert_vel2.get(v[2]);//kp * e + ki * eI + kd * de;
 
-	u = value2range(u, m_max_force);
+	u = value2range(u, -m_max_force, m_max_force);
 
 	force += u;
 
-	force = value2range(force, m_max_force);
+	force = value2range(force, -m_max_force, m_max_force);
 
-	m_force_1 = pf1 * force;
-	m_force_2 = pf2 * force;
-	m_force_3 = pf3 * force;
-	m_force_4 = pf4 * force;
+	m_forces = pfs * force;
 }
 
 void Model::state_model_angles()
@@ -568,8 +530,8 @@ void Model::state_model_angles()
 	const double coeff_f3 = 0.988;
 	const double coeff_f4 = 0.982;
 
-	double df_12 = coeff_f1 * m_force_1 - coeff_f2 * m_force_2;
-	double df_34 = coeff_f3 * m_force_3 - coeff_f4 * m_force_4;
+	double df_12 = coeff_f1 * m_forces[0] - coeff_f2 * m_forces[1];
+	double df_34 = coeff_f3 * m_forces[2] - coeff_f4 * m_forces[3];
 
 	if(df_12 != 0 || df_34 != 0){
 
@@ -591,15 +553,13 @@ void Model::state_model_angles()
 
 	}
 	/// yaw = F1 + F2 - (F3 + F4)
-	double df_1234 = m_force_1 + m_force_2 - m_force_3 - m_force_4;
+	double df_1234 = m_forces[0] + m_forces[1] - m_forces[2] - m_forces[3];
 	if(df_1234){
 		double a1234 = df_1234 / m_mass;
 		double w_1234 = sqrt(std::abs(a1234) / m_arm) * m_dt;
 		if(a1234 < 0) w_1234 = -w_1234;
 		m_angles[2] += w_1234;
 	}
-
-	m_force = coeff_f1 * m_force_1 + coeff_f2 * m_force_2 + coeff_f3 * m_force_3 + coeff_f4 * m_force_4;
 }
 
 void Model::state_model_position()
@@ -632,7 +592,8 @@ void Model::state_model_position()
 	//push_log("from mat: " + vel.operator std::string());
 
 	///************* engine power on/off
-	double force = m_power? m_force : 0;
+	double force_general = m_forces.sum();
+	double force = m_power? force_general : 0;
 	///*************
 
 	vel *= (force/m_mass * m_dt);
@@ -702,49 +663,7 @@ void Model::simpleHeightControl()
 
 }
 
-void Model::normal_work_simple()
-{
-//	double e = m_heightGoal - m_pos[2];
-//	Vec3f vec_force = normal * m_force;
-//	float force = vec_force[2];
 
-	const double kp = 1.1;
-	const double kd = 20.0;
-	const double ki = 0.1;
-
-	m_control_height.setGoal(m_heightGoal);
-	m_control_height.setKpid(kp, kd, ki);
-	m_control_height.set_use_eI(m_use_eI_height);
-
-//	m_e_I += e;
-
-//	double de = e - m_prev_e;
-//	m_prev_e = e;
-
-	double u = m_control_height.get(m_pos[2]);
-
-	u = std::max(0., std::min(m_max_force, u));
-
-	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
-	double force = m_mass * u;
-
-	if(part_f > 0){
-		double pf1 = m_force_1 / part_f;
-		double pf2 = m_force_2 / part_f;
-		double pf3 = m_force_3 / part_f;
-		double pf4 = m_force_4 / part_f;
-
-		m_force_1 = pf1 * force;
-		m_force_2 = pf2 * force;
-		m_force_3 = pf3 * force;
-		m_force_4 = pf4 * force;
-	}else{
-		m_force_1 = force / 4;
-		m_force_2 = force / 4;
-		m_force_3 = force / 4;
-		m_force_4 = force / 4;
-	}
-}
 
 void Model::load_params()
 {
@@ -863,14 +782,14 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(15.);
 
-		const double kp_y = 1;
-		const double kd_y = 10;
+		const double kp_y = 2.5;
+		const double kd_y = 1;
 
 		const double kp_tr = 1;
 		const double kd_tr = 10;
 
 		const double kp_vel = 1;
-		const double kd_vel = 140;
+		const double kd_vel = 170;
 
 		const double speed_max = 1;
 
@@ -893,10 +812,10 @@ void Model::calculate_track_to_goal()
 		Vec3d exy = e;
 		exy[2] = 0;
 		Vec3d velxy = velocity();
-		velxy[2] = 0;
+		//velxy[2] = 0;
 
 		if(exy.norm() > m_accuracy_goal){
-			double n = exy.norm();
+			double n = e.norm();
 			n = log(1 + 2 * n);
 			m_control_normxy.setKpid(kp_tr, kd_tr, 0);
 			m_control_normxy.setGoal(0);
@@ -904,14 +823,14 @@ void Model::calculate_track_to_goal()
 
 			double v = velxy.norm(), v_max = speed_max;
 			if(exy.norm() < m_radius_goal){
-				v_max = exy.norm() / m_radius_goal * speed_max;
+				v_max = e.norm() / m_radius_goal * speed_max;
 			}
 			m_control_velxy.setKpid(kp_vel, kd_vel, 0);
 			m_control_velxy.setGoal(v_max);
 			double vu = m_control_velxy.get(v) * m_dt;
 
-			double uta = value2range((vu - u) * ta, max_other_change);
-			double ura = value2range((vu - u) * ra, max_other_change);
+			double uta = value2range((vu - u) * ta, -max_other_change, max_other_change);
+			double ura = value2range((vu - u) * ra, -max_other_change, max_other_change);
 
 			m_angles_goal[0] = uta;
 			m_angles_goal[1] = ura;

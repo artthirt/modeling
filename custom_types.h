@@ -43,6 +43,11 @@ public:
 		std::copy((char*)v.val, (char*)v.val + sizeof(val), (char*)val);
 		return *this;
 	}
+	Vec_<T, count>& operator=(const T& v){
+		for(int i = 0; i < count; i++)
+			val[i] = v;
+		return *this;
+	}
 	/**
 	 * @brief Vec_
 	 * example: Vec4f v = (Vec3f())
@@ -163,8 +168,27 @@ public:
 		return res;
 	}
 
+	inline T sum() const{
+		T res = T(0);
+		for(int i = 0; i < count; i++)
+			res += val[i];
+		return res;
+	}
+	inline T min() const{
+		T res = val[0];
+		for(int i = 1; i < count; i++)
+			res = ::min(res, val[i]);
+		return res;
+	}
+	inline T max() const{
+		T res = val[0];
+		for(int i = 1; i < count; i++)
+			res = ::max(res, val[i]);
+		return res;
+	}
+
 	inline T norm() const{
-		T ret = 0;
+		T ret = T(0);
 		for(int i = 0; i < count; i++){
 			ret += val[i] * val[i];
 		}
@@ -412,10 +436,20 @@ inline T crop_angle(T value)
 }
 
 template< typename T >
-inline T value2range(T value, T max_range)
+inline T value2range(T value, T min_range, T max_range)
 {
-	return std::max(-max_range, std::min(max_range, value));
+	return std::max(min_range, std::min(max_range, value));
 }
+
+template< typename T >
+inline T values2range(T value, double min_range, double max_range)
+{
+	T res(value);
+	res = min(res, max_range);
+	res = max(res, min_range);
+	return res;
+}
+
 
 typedef Vec_<float, 2> Vec2f;
 typedef Vec_<double, 2> Vec2d;

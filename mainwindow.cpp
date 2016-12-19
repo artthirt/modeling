@@ -258,7 +258,7 @@ void MainWindow::on_dsb_f4_valueChanged(double arg1)
 void MainWindow::on_pb_rese_angles_clicked()
 {
 	ui->widgetView->model().reset_angles();
-	ui->pb_use_forces->setChecked(false);
+//	ui->pb_use_forces->setChecked(false);
 }
 
 void MainWindow::on_dsb_height_valueChanged(double arg1)
