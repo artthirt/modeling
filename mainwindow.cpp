@@ -191,7 +191,7 @@ void MainWindow::onTimeout()
 	ui->lb_vely->setText(QString::number(ui->widgetView->model().velocity()[1], 'f', 3));
 	ui->lb_velz->setText(QString::number(ui->widgetView->model().velocity()[2], 'f', 3));
 
-	ui->lb_vel->setText("V(norm)=" + QString::number(ui->widgetView->model().velocity().norm(), 'f', 5));
+	ui->lb_vel->setText("V(norm)=" + QString::number(ui->widgetView->model().velocity().norm(), 'f', 7));
 	ui->lb_goal_a->setText("goals: φ=" + QString::number(ui->widgetView->model().goal_yaw(), 'f', 2) +
 			" θ=" + QString::number(ui->widgetView->model().goal_tangage(), 'f', 2) +
 			" α=" + QString::number(ui->widgetView->model().goal_roll(), 'f', 2));

@@ -430,7 +430,7 @@ Vec_<T, count> crop_angles(const Vec_<T, count>& v1)
  * @return value in [-M_PI/2, M_PI/2]
  */
 template< typename T >
-inline T crop_angle(T value)
+inline T crop_angle(const T& value)
 {
 	return atan2(sin(value), cos(value));
 }

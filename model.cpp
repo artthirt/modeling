@@ -84,7 +84,7 @@ Model::Model()
 
 	load_params();
 
-	if(m_control_angles.eI().empty())
+	if(m_control_angles_TR.eI().empty())
 		m_use_integral_angles = true;
 	else
 		m_use_integral_angles = false;
@@ -127,7 +127,7 @@ void Model::initialize()
 	m_pos = Vec3d();
 	m_angles = Vec3d();
 	m_angles_vel = Vec3d();
-	m_control_angles.reset();
+	m_control_angles_TR.reset();
 	m_track_points.clear();
 }
 
@@ -271,7 +271,7 @@ void Model::reset_angles()
 	m_angles = Vec3d::zeros();
 	m_forces = Vec4d::zeros();
 
-	m_control_angles.eI() = Vec3d::zeros();
+	m_control_angles_TR.eI() = Vec3d::zeros();
 	m_control_height.eI() = 0;
 
 	m_pos = Vec3d::zeros();
@@ -379,17 +379,26 @@ void Model::calculate_angles()
 	/// [1] - roll
 	/// [2] - yaw
 
-	const double kp = 10.00;
-	const double ki = 0.10;
-	const double kd = 0.30;
-	const double ka = 1.0;
+	const double kpTR = 1.00;
+	const double kiTR = 0.10;
+	const double kdTR = 0.1;
 
-	m_control_angles.setKpid(kp, kd, ki);
-	m_control_angles.use_eI = m_use_integral_angles;
-	m_control_angles.setGoal(m_angles_goal);
-	m_control_angles.crop_value = &crop_angles;
+	const double kpY = 2.00;
+	const double kiY = 0.10;
+	const double kdY = 0.8;
 
-	Vec3d u = m_control_angles.get(m_angles);
+	m_control_angles_TR.setKpid(kpTR, kdTR, kiTR);
+	m_control_angles_TR.use_eI = m_use_integral_angles;
+	m_control_angles_TR.setGoal(m_angles_goal);
+	m_control_angles_TR.crop_value = &crop_angles;
+
+	m_control_angles_Y.setKpid(kpY, kdY, kiY);
+	m_control_angles_Y.use_eI = m_use_integral_angles;
+	m_control_angles_Y.setGoal(m_angles_goal[2]);
+	m_control_angles_Y.crop_value = &crop_angle;
+
+	Vec2d uTR = m_control_angles_TR.get(m_angles);
+	double uY = m_control_angles_Y.get(m_angles[2]);
 	//u = sign(u) * (u * u);
 
 	//double avg_f = m_force;
@@ -402,20 +411,22 @@ void Model::calculate_angles()
 
 //	u = values2range(u, -m_max_force, m_max_force);
 
-	u /= 4;
+	uTR /= 4;
+	uY	/= 4;
 	double force0 = m_forces.sum();
 
 	m_prev_forces = m_forces;
 
 	Vec4d vu;
 
-	vu[0] = force0 +	u[0]	- u[1] + u[2];
-	vu[2] = force0 +	u[0]	+ u[1] - u[2];
-	vu[1] = force0 + (-u[0])	+ u[1] + u[2];
-	vu[3] = force0 + (-u[0])	- u[1] - u[2];
+	vu[0] = force0/4 +	uTR[0]		- uTR[1] + uY;
+	vu[2] = force0/4 +	uTR[0]		+ uTR[1] - uY;
+	vu[1] = force0/4 + (-uTR[0])	+ uTR[1] + uY;
+	vu[3] = force0/4 + (-uTR[0])	- uTR[1] - uY;
 
 	double force1 = vu.sum();
 
+	//m_forces = vu;
 	if(force1){
 //	double part_f = m_force_1 + m_force_2 + m_force_3 + m_force_4;
 		Vec4d pfs = vu / force1;
@@ -670,9 +681,9 @@ void Model::load_params()
 	if(!SimpleXML::load_param(config_file, params))
 		return;
 
-	m_control_angles.eI()[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
-	m_control_angles.eI()[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
-	m_control_angles.eI()[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
+	m_control_angles_TR.eI()[0] = params["angles"].toMap()["integral"].toMap()["tangage"].toDouble();
+	m_control_angles_TR.eI()[1] = params["angles"].toMap()["integral"].toMap()["roll"].toDouble();
+	m_control_angles_TR.eI()[2] = params["angles"].toMap()["integral"].toMap()["yaw"].toDouble();
 
 	m_control_vert_vel2.eI() = params["height"].toMap()["integral_vel"].toDouble();
 	m_control_height.eI() = params["height"].toMap()["integral_goal"].toDouble();
@@ -688,9 +699,9 @@ void Model::save_params()
 {
 	QMap< QString, QVariant > params, pang, pint;
 
-	pint["tangage"]		= m_control_angles.eI()[0];
-	pint["roll"]		= m_control_angles.eI()[1];
-	pint["yaw"]			= m_control_angles.eI()[2];
+	pint["tangage"]		= m_control_angles_TR.eI()[0];
+	pint["roll"]		= m_control_angles_TR.eI()[1];
+	pint["yaw"]			= m_control_angles_TR.eI()[2];
 
 	pang["integral"] = pint;
 
@@ -781,8 +792,8 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(15.);
 
-		const double kp_y = 2.5;
-		const double kd_y = 1;
+		const double kp_y = 1.5;
+		const double kd_y = 5;
 
 		const double kp_tr = 1;
 		const double kd_tr = 10;

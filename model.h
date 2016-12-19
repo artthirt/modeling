@@ -299,7 +299,8 @@ private:
 
 private:
 	pid_control< double, double > m_control_height;
-	pid_control< ct::Vec3d, double > m_control_angles;
+	pid_control< ct::Vec2d, double > m_control_angles_TR;
+	pid_control< double, double > m_control_angles_Y;
 	pid_control< double, double > m_control_vert_vel;
 	pid_control< double, double > m_control_vert_vel2;
 	pid_control< double, double > m_control_normxy;
