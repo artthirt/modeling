@@ -495,9 +495,9 @@ void Model::calculate_hovering()
 
 void Model::normal_work()
 {
-	const double kp = 1;
+	const double kp = 1.5;
 	const double ki = 0.1;
-	const double kd = 1;
+	const double kd = 50.;
 
 	double force = m_forces.sum();
 
