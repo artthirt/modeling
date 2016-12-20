@@ -269,6 +269,7 @@ double Model::force(int index)
 void Model::reset_angles()
 {
 	m_angles = Vec3d::zeros();
+	m_angles_vel = Vec3d::zeros();
 	m_forces = Vec4d::zeros();
 
 	m_control_angles_TR.eI() = Vec3d::zeros();
@@ -277,6 +278,8 @@ void Model::reset_angles()
 	m_pos = Vec3d::zeros();
 
 	m_track_points.clear();
+
+	m_state = NORMAL;
 }
 
 void Model::setYaw(double v)
@@ -379,13 +382,13 @@ void Model::calculate_angles()
 	/// [1] - roll
 	/// [2] - yaw
 
-	const double kpTR = 1.00;
-	const double kiTR = 0.10;
-	const double kdTR = 0.1;
+	const double kpTR = 0.90;
+	const double kiTR = 0.005;
+	const double kdTR = 5.0;
 
-	const double kpY = 2.00;
-	const double kiY = 0.10;
-	const double kdY = 0.8;
+	const double kpY = 0.70;
+	const double kiY = 0.005;
+	const double kdY = 5.00;
 
 	m_control_angles_TR.setKpid(kpTR, kdTR, kiTR);
 	m_control_angles_TR.use_eI = m_use_integral_angles;
@@ -558,8 +561,8 @@ void Model::state_model_angles()
 		double w_tan_34	= w_34 * sin(M_PI / 4.);
 		double w_roll_34 = w_34 * cos(M_PI / 4.);
 
-		m_angles[0] += w_tan_12 + w_tan_34;
-		m_angles[1] += w_roll_34 - w_roll_12;
+		m_angles_vel[0] += w_tan_12 + w_tan_34;
+		m_angles_vel[1] += w_roll_34 - w_roll_12;
 
 	}
 	/// yaw = F1 + F2 - (F3 + F4)
@@ -568,7 +571,7 @@ void Model::state_model_angles()
 		double a1234 = df_1234 / m_mass;
 		double w_1234 = sqrt(std::abs(a1234) / m_arm) * m_dt;
 		if(a1234 < 0) w_1234 = -w_1234;
-		m_angles[2] += w_1234;
+		m_angles_vel[2] += w_1234;
 	}
 }
 
@@ -626,6 +629,7 @@ void Model::state_model_position()
 			m_vel[1] = 0;
 			m_angles[0] = 0;
 			m_angles[1] = 0;
+			m_angles_vel = Vec3d::zeros();
 		}
 	}
 
@@ -636,6 +640,7 @@ void Model::state_model_position()
 	if(m_pos[2] < 0){
 		m_pos[2] = 0;
 		m_vel = Vec3d::zeros();
+		m_angles_vel = Vec3d::zeros();
 		cout << "break\n";
 	}
 
@@ -792,8 +797,8 @@ void Model::calculate_track_to_goal()
 		const double max_yaw_change = angle2rad(30.);
 		const double max_other_change = angle2rad(15.);
 
-		const double kp_y = 1.5;
-		const double kd_y = 5;
+		const double kp_y = 5.0;
+		const double kd_y = 0.5;
 
 		const double kp_tr = 1;
 		const double kd_tr = 10;
