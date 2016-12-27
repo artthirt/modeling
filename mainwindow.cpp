@@ -7,7 +7,7 @@ const float maximum_force = 150.f;
 const float d_force = maximum_force/1000.f;
 const double maximum_vert_vel = 3;
 
-const QString config_main("config.main.xml");
+const QString config_main("./config.main.xml");
 
 QString red_lamp(int radius)
 {

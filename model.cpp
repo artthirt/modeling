@@ -24,7 +24,7 @@ const double eps_hard = 1e-6;
 /// minumum angle for choose state
 const double angle_for_chose = angle2rad(5);
 
-const QString config_file("config.model.xml");
+const QString config_file("./config.model.xml");
 
 ////////////////////////////////////////////////
 

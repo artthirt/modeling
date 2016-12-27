@@ -13,7 +13,7 @@
 
 #include <simple_xml.hpp>
 
-const QString xml_config("config.glview.xml");
+const QString xml_config("./config.glview.xml");
 
 typedef float GLVertex3f[3];
 
